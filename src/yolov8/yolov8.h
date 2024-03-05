@@ -3,23 +3,17 @@
 //
 
 #pragma once
-#include "string"
+#include "common.h"
+#include "memory"
 #include "rknn_api.h"
-
-typedef struct {
-  rknn_context rknn_ctx;
-  rknn_input_output_num io_num;
-  rknn_tensor_attr* input_attrs;
-  rknn_tensor_attr* output_attrs;
-  int model_channel;
-  int model_width;
-  int model_height;
-  bool is_quant;
-} rknn_app_context_t;
+#include "string"
 
 class Yolov8 {
  public:
   Yolov8(std::string && model_path);
- private:
-  rknn_app_context_t rknn_app_context_;
+  ~Yolov8();
+  int Inference(void *image_buf, object_detect_result_list *od_results, letterbox_t letter_box);
+
+private:
+  rknn_app_context_t app_ctx_;
 };

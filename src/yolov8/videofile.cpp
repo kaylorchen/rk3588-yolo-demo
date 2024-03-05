@@ -4,6 +4,7 @@
 
 #include "videofile.h"
 #include "kaylordut/log/logger.h"
+#include "image_process.h"
 
 VideoFile::VideoFile(const std::string &&filename) : filename_(filename) {
   capture_ = new cv::VideoCapture(filename_);
@@ -37,11 +38,27 @@ void VideoFile::Display(const float framerate, const int target_size) {
   cv::destroyAllWindows();
 }
 
-std::shared_ptr<cv::Mat> VideoFile::GetNextFrame(const int target_size) {
-  static ImageProcess
-      image_process(capture_->get(cv::CAP_PROP_FRAME_WIDTH), capture_->get(cv::CAP_PROP_FRAME_HEIGHT), target_size);
+std::shared_ptr<cv::Mat> VideoFile::GetNextFrame() {
+//  static ImageProcess
+//      image_process(capture_->get(cv::CAP_PROP_FRAME_WIDTH), capture_->get(cv::CAP_PROP_FRAME_HEIGHT), target_size);
+  auto frame = std::make_shared<cv::Mat>();
+  *capture_ >> *frame;
+  if (frame->empty()){return nullptr;}
+  return std::move(frame);
+//  return std::move(image_process.Convert(frame));
+}
+
+cv::Mat VideoFile::test() {
   cv::Mat frame;
   *capture_ >> frame;
-  if (frame.empty()){return nullptr;}
-  return std::move(image_process.Convert(frame));
+  cv::waitKey(125);
+  return frame;
+}
+
+int VideoFile::get_frame_width() {
+  return capture_->get(cv::CAP_PROP_FRAME_WIDTH);
+}
+
+int VideoFile::get_frame_height() {
+  return capture_->get(cv::CAP_PROP_FRAME_HEIGHT);
 }
