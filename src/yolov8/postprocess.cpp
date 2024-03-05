@@ -3,9 +3,11 @@
 //
 
 #include "postprocess.h"
+
+#include <set>
+
 #include "filesystem"
 #include "kaylordut/log/logger.h"
-#include <set>
 static char *labels[OBJ_CLASS_NUM];
 inline static int clamp(float val, int min, int max) {
   return val > min ? (val < max ? val : max) : min;
@@ -16,15 +18,14 @@ static char *readLine(FILE *fp, char *buffer, int *len) {
   size_t buff_len = 0;
 
   buffer = (char *)malloc(buff_len + 1);
-  if (!buffer)
-    return NULL; // Out of memory
+  if (!buffer) return NULL;  // Out of memory
 
   while ((ch = fgetc(fp)) != '\n' && ch != EOF) {
     buff_len++;
     void *tmp = realloc(buffer, buff_len + 1);
     if (tmp == NULL) {
       free(buffer);
-      return NULL; // Out of memory
+      return NULL;  // Out of memory
     }
     buffer = (char *)tmp;
 
@@ -56,8 +57,7 @@ static int readLines(const char *fileName, char *lines[], int max_line) {
 
   while ((s = readLine(file, s, &n)) != NULL) {
     lines[i++] = s;
-    if (i >= max_line)
-      break;
+    if (i >= max_line) break;
   }
   fclose(file);
   return i;

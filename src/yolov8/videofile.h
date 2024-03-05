@@ -10,7 +10,7 @@ class VideoFile {
   VideoFile(const std::string &&filename);
   ~VideoFile();
   void Display(const float framerate = 25.0, const int target_size = 640);
-  std::shared_ptr<cv::Mat> GetNextFrame();
+  std::unique_ptr<cv::Mat> GetNextFrame();
   cv::Mat test();
   int get_frame_width();
   int get_frame_height();

@@ -9,7 +9,7 @@
 class ImageProcess {
  public:
   ImageProcess(int width, int height, int target_size);
-  std::shared_ptr<cv::Mat> Convert(const cv::Mat &src);
+  std::unique_ptr<cv::Mat> Convert(const cv::Mat &src);
   const letterbox_t &get_letter_box();
   void ImagePostProcess(cv::Mat &image, object_detect_result_list &od_results);
 
