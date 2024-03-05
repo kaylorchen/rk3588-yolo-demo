@@ -24,13 +24,16 @@ int main(int argc, char *agrv[]) {
   ThreadPool pool(1);
   while (convert_img != nullptr) {
     cv::cvtColor(*convert_img, rgb_img, cv::COLOR_BGR2RGB);
-
+    std::this_thread::sleep_for(std::chrono::milliseconds(40));
     pool.enqueue([&]{ run(yolov_8, image_process, std::move(original_img), rgb_img, image_process.get_letter_box());});
+//    run(yolov_8, image_process, std::move(original_img), rgb_img, image_process.get_letter_box());
 
     original_img = video_file.GetNextFrame();
     convert_img = image_process.Convert(*original_img);
   }
   KAYLORDUT_LOG_INFO("exit loop");
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(4000));
   cv::destroyAllWindows();
   return 0;
 }
