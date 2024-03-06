@@ -4,9 +4,14 @@
 #include "kaylordut/log/logger.h"
 #include "threadpool.h"
 
-void run(Yolov8 &yolov_8, ImageProcess &image_process, std::shared_ptr<cv::Mat> origin, cv::Mat rgb, const letterbox_t &letter_box){
-  object_detect_result_list od_results;
-  yolov_8.Inference(rgb.ptr(),  &od_results, letter_box); image_process.ImagePostProcess(*origin, od_results);
+void run(Yolov8 &yolov_8,
+         ImageProcess &image_process,
+         std::shared_ptr<cv::Mat> origin,
+         cv::Mat rgb,
+         const letterbox_t &letter_box) {
+//  object_detect_result_list od_results;
+//  yolov_8.Inference(rgb.ptr(), &od_results, letter_box);
+//  image_process.ImagePostProcess(*origin, od_results);
   cv::imshow("Video", *origin);
   cv::waitKey(1);
 }
@@ -24,10 +29,13 @@ int main(int argc, char *agrv[]) {
   ThreadPool pool(1);
   while (convert_img != nullptr) {
     cv::cvtColor(*convert_img, rgb_img, cv::COLOR_BGR2RGB);
-    std::this_thread::sleep_for(std::chrono::milliseconds(40));
-    pool.enqueue([&]{ run(yolov_8, image_process, std::move(original_img), rgb_img, image_process.get_letter_box());});
-//    run(yolov_8, image_process, std::move(original_img), rgb_img, image_process.get_letter_box());
-
+    pool.enqueue([&](std::shared_ptr<cv::Mat> image) {
+      run(yolov_8,
+          image_process,
+          std::move(image),
+          rgb_img,
+          image_process.get_letter_box());
+    }, std::move(original_img));
     original_img = video_file.GetNextFrame();
     convert_img = image_process.Convert(*original_img);
   }
