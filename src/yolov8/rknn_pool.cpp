@@ -42,8 +42,7 @@ void RknnPool::DeInit() {
   deinit_post_process();
 }
 
-void RknnPool::AddInferenceTask(std::unique_ptr<cv::Mat> src, ImageProcess &image_process) {
-  std::shared_ptr<cv::Mat> tmp = std::move(src);
+void RknnPool::AddInferenceTask(std::shared_ptr<cv::Mat> src, ImageProcess &image_process) {
   auto mode_id = get_model_id();
   pool_->enqueue([&](std::shared_ptr<cv::Mat> original_img, int mode_id) {
     auto convert_img = image_process.Convert(*original_img);
@@ -56,7 +55,7 @@ void RknnPool::AddInferenceTask(std::unique_ptr<cv::Mat> src, ImageProcess &imag
     image_process.ImagePostProcess(*original_img, od_results);
     std::lock_guard<std::mutex> lock_guard(this->image_results_mutex_);
     this->image_results_.push(std::move(original_img));
-  }, std::move(tmp), mode_id);
+  }, std::move(src), mode_id);
 }
 
 int RknnPool::get_model_id() {

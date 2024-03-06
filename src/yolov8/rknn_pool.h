@@ -14,7 +14,7 @@ class RknnPool {
   ~RknnPool();
   void Init();
   void DeInit();
-  void AddInferenceTask(std::unique_ptr<cv::Mat> src, ImageProcess &image_process);
+  void AddInferenceTask(std::shared_ptr<cv::Mat> src, ImageProcess &image_process);
   int get_model_id();
   std::shared_ptr<cv::Mat> GetImageResultFromQueue();
   int GetTasksSize();
