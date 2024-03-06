@@ -21,6 +21,8 @@ class ThreadPool {
   auto enqueue(F&& f, Args&&... args)
   -> std::future<typename std::result_of<F(Args...)>::type>;
   ~ThreadPool();
+  bool IsTasksEmpty();
+  int TasksSize();
  private:
   // need to keep track of threads so we can join them
   std::vector< std::thread > workers;
@@ -96,6 +98,16 @@ inline ThreadPool::~ThreadPool()
   condition.notify_all();
   for(std::thread &worker: workers)
     worker.join();
+}
+
+inline bool ThreadPool::IsTasksEmpty() {
+  std::lock_guard<std::mutex> lock_guard(queue_mutex);
+  return tasks.empty();
+}
+
+inline int ThreadPool::TasksSize() {
+  std::lock_guard<std::mutex> lock_guard(queue_mutex);
+  return tasks.size();
 }
 
 #endif

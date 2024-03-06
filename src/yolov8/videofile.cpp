@@ -38,10 +38,10 @@ void VideoFile::Display(const float framerate, const int target_size) {
   cv::destroyAllWindows();
 }
 
-std::shared_ptr<cv::Mat> VideoFile::GetNextFrame() {
+std::unique_ptr<cv::Mat> VideoFile::GetNextFrame() {
 //  static ImageProcess
 //      image_process(capture_->get(cv::CAP_PROP_FRAME_WIDTH), capture_->get(cv::CAP_PROP_FRAME_HEIGHT), target_size);
-  auto frame = std::make_shared<cv::Mat>();
+  auto frame = std::make_unique<cv::Mat>();
   *capture_ >> *frame;
   if (frame->empty()){return nullptr;}
   return std::move(frame);
