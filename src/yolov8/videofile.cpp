@@ -3,8 +3,9 @@
 //
 
 #include "videofile.h"
-#include "kaylordut/log/logger.h"
+
 #include "image_process.h"
+#include "kaylordut/log/logger.h"
 
 VideoFile::VideoFile(const std::string &&filename) : filename_(filename) {
   capture_ = new cv::VideoCapture(filename_);
@@ -26,14 +27,19 @@ void VideoFile::Display(const float framerate, const int target_size) {
   const int delay = 1000 / framerate;
   cv::namedWindow("Video", cv::WINDOW_AUTOSIZE);
   cv::Mat frame;
-  ImageProcess
-      image_process(capture_->get(cv::CAP_PROP_FRAME_WIDTH), capture_->get(cv::CAP_PROP_FRAME_HEIGHT), target_size);
+  ImageProcess image_process(capture_->get(cv::CAP_PROP_FRAME_WIDTH),
+                             capture_->get(cv::CAP_PROP_FRAME_HEIGHT),
+                             target_size);
   while (true) {
     *capture_ >> frame;
-    if (frame.empty()) { break; }
+    if (frame.empty()) {
+      break;
+    }
     cv::imshow("Video", *(image_process.Convert(frame)));
-//    cv::imshow("Video", frame);
-    if (cv::waitKey(delay) >= 0) { break; }
+    //    cv::imshow("Video", frame);
+    if (cv::waitKey(delay) >= 0) {
+      break;
+    }
   }
   cv::destroyAllWindows();
 }
@@ -41,7 +47,9 @@ void VideoFile::Display(const float framerate, const int target_size) {
 std::unique_ptr<cv::Mat> VideoFile::GetNextFrame() {
   auto frame = std::make_unique<cv::Mat>();
   *capture_ >> *frame;
-  if (frame->empty()){return nullptr;}
+  if (frame->empty()) {
+    return nullptr;
+  }
   return std::move(frame);
 }
 

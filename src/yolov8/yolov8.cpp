@@ -3,6 +3,7 @@
 //
 
 #include "yolov8.h"
+
 #include "kaylordut/log/logger.h"
 #include "kaylordut/time/time_duration.h"
 #include "postprocess.h"
@@ -28,7 +29,7 @@ int read_data_from_file(const char *path, char **out_data) {
   }
   fseek(fp, 0, SEEK_END);
   int file_size = ftell(fp);
-  char *data = (char *) malloc(file_size + 1);
+  char *data = (char *)malloc(file_size + 1);
   data[file_size] = 0;
   fseek(fp, 0, SEEK_SET);
   if (file_size != fread(data, 1, file_size, fp)) {
@@ -54,8 +55,7 @@ static void dump_tensor_attr(rknn_tensor_attr *attr) {
       get_qnt_type_string(attr->qnt_type), attr->zp, attr->scale);
 }
 
-Yolov8::Yolov8(std::string &&model_path) : model_path_(model_path){
-}
+Yolov8::Yolov8(std::string &&model_path) : model_path_(model_path) {}
 
 int Yolov8::Init(rknn_context *ctx_in, bool copy_weight) {
   int model_len = 0;
@@ -85,11 +85,14 @@ int Yolov8::Init(rknn_context *ctx_in, bool copy_weight) {
   }
   rknn_core_mask core_mask;
   switch (get_core_num()) {
-    case 0:core_mask = RKNN_NPU_CORE_0;
+    case 0:
+      core_mask = RKNN_NPU_CORE_0;
       break;
-    case 1:core_mask = RKNN_NPU_CORE_1;
+    case 1:
+      core_mask = RKNN_NPU_CORE_1;
       break;
-    case 2:core_mask = RKNN_NPU_CORE_2;
+    case 2:
+      core_mask = RKNN_NPU_CORE_2;
       break;
   }
   ret = rknn_set_core_mask(ctx_, core_mask);
@@ -99,11 +102,13 @@ int Yolov8::Init(rknn_context *ctx_in, bool copy_weight) {
   }
 
   rknn_sdk_version version;
-  ret = rknn_query(ctx_, RKNN_QUERY_SDK_VERSION, &version, sizeof(rknn_sdk_version));
+  ret = rknn_query(ctx_, RKNN_QUERY_SDK_VERSION, &version,
+                   sizeof(rknn_sdk_version));
   if (ret < 0) {
     return -1;
   }
-  KAYLORDUT_LOG_INFO("sdk version: {} driver version: {}", version.api_version, version.drv_version);
+  KAYLORDUT_LOG_INFO("sdk version: {} driver version: {}", version.api_version,
+                     version.drv_version);
 
   // Get Model Input Output Number
   rknn_input_output_num io_num;
@@ -112,11 +117,12 @@ int Yolov8::Init(rknn_context *ctx_in, bool copy_weight) {
     KAYLORDUT_LOG_ERROR("rknn_query failed! error code = {}", ret);
     return -1;
   }
-  KAYLORDUT_LOG_INFO("model input num: {}, and output num: {}", io_num.n_input, io_num.n_output);
+  KAYLORDUT_LOG_INFO("model input num: {}, and output num: {}", io_num.n_input,
+                     io_num.n_output);
   // Get Model Input Info
   KAYLORDUT_LOG_INFO("input tensors:");
   rknn_tensor_attr
-      input_attrs[io_num.n_input]; //这里使用的是变长数组，不建议这么使用
+      input_attrs[io_num.n_input];  //这里使用的是变长数组，不建议这么使用
   memset(input_attrs, 0, sizeof(input_attrs));
   for (int i = 0; i < io_num.n_input; i++) {
     input_attrs[i].index = i;
@@ -187,9 +193,7 @@ int Yolov8::Init(rknn_context *ctx_in, bool copy_weight) {
   return 0;
 }
 
-Yolov8::~Yolov8() {
-  DeInit();
-}
+Yolov8::~Yolov8() { DeInit(); }
 
 int Yolov8::DeInit() {
   if (app_ctx_.rknn_ctx != 0) {
@@ -208,15 +212,14 @@ int Yolov8::DeInit() {
   return 0;
 }
 
-rknn_context *Yolov8::get_rknn_context() {
-  return &(this->ctx_);
-}
+rknn_context *Yolov8::get_rknn_context() { return &(this->ctx_); }
 
-int Yolov8::Inference(void *image_buf, object_detect_result_list *od_results, letterbox_t letter_box) {
+int Yolov8::Inference(void *image_buf, object_detect_result_list *od_results,
+                      letterbox_t letter_box) {
   TimeDuration total_duration;
   inputs_[0].buf = image_buf;
-  int ret =
-      rknn_inputs_set(app_ctx_.rknn_ctx, app_ctx_.io_num.n_input, inputs_.get());
+  int ret = rknn_inputs_set(app_ctx_.rknn_ctx, app_ctx_.io_num.n_input,
+                            inputs_.get());
   if (ret < 0) {
     KAYLORDUT_LOG_ERROR("rknn_input_set failed! error code = {}", ret);
     return -1;
@@ -242,24 +245,19 @@ int Yolov8::Inference(void *image_buf, object_detect_result_list *od_results, le
   const float nms_threshold = NMS_THRESH;       // 默认的NMS阈值
   const float box_conf_threshold = BOX_THRESH;  // 默认的置信度阈值
   // Post Process
-  post_process(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold, nms_threshold,
-               od_results);
+  post_process(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
+               nms_threshold, od_results);
 
   // Remeber to release rknn outputs_
   rknn_outputs_release(app_ctx_.rknn_ctx, app_ctx_.io_num.n_output,
                        outputs_.get());
   auto total_delta = std::chrono::duration_cast<std::chrono::milliseconds>(
       total_duration.DurationSinceLastTime());
-  KAYLORDUT_LOG_DEBUG(
-      "Inference time is {}ms and total time is {}ms",
-      duration.count(), total_delta.count());
+  KAYLORDUT_LOG_DEBUG("Inference time is {}ms and total time is {}ms",
+                      duration.count(), total_delta.count());
   return 0;
 }
 
-int Yolov8::get_model_width() {
-  return app_ctx_.model_width;
-}
+int Yolov8::get_model_width() { return app_ctx_.model_width; }
 
-int Yolov8::get_model_height() {
-  return app_ctx_.model_height;
-}
+int Yolov8::get_model_height() { return app_ctx_.model_height; }
