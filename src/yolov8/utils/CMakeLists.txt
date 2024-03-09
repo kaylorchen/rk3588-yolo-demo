@@ -1,0 +1,6 @@
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+find_package(kaylordut REQUIRED)
+file(GLOB SRC "*.cpp")
+add_library(yolov8-kaylordut ${SRC})
+target_link_libraries(yolov8-kaylordut ${kaylordut_LIBS} ${OpenCV_LIBS} rknnrt)
