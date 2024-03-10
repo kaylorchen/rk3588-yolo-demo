@@ -14,3 +14,5 @@ target_link_libraries(videofile_demo ${kaylordut_LIBS} ${OpenCV_LIBS} yolov8-kay
 
 add_executable(camera_demo camera_demo.cpp)
 target_link_libraries(camera_demo ${kaylordut_LIBS} ${OpenCV_LIBS} yolov8-kaylordut)
+#add_executable(camera_demo camera_demo.cpp utils/camera.cpp)
+#target_link_libraries(camera_demo ${kaylordut_LIBS} ${OpenCV_LIBS})
