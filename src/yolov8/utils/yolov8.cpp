@@ -185,7 +185,7 @@ int Yolov8::Init(rknn_context *ctx_in, bool copy_weight) {
   inputs_ = std::make_unique<rknn_input[]>(app_ctx_.io_num.n_input);
   outputs_ = std::make_unique<rknn_output[]>(app_ctx_.io_num.n_output);
   inputs_[0].index = 0;
-  inputs_[0].type = RKNN_TENSOR_INT8;
+  inputs_[0].type = RKNN_TENSOR_UINT8;
   inputs_[0].fmt = RKNN_TENSOR_NHWC;
   inputs_[0].size =
       app_ctx_.model_width * app_ctx_.model_height * app_ctx_.model_channel;
