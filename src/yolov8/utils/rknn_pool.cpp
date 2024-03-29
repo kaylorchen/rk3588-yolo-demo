@@ -7,16 +7,17 @@
 #include "kaylordut/log/logger.h"
 #include "postprocess.h"
 
-RknnPool::RknnPool(const std::string model_path, const int thread_num) {
+RknnPool::RknnPool(const std::string model_path, const int thread_num, const std::string lable_path) {
   this->thread_num_ = thread_num;
   this->model_path_ = model_path;
+  this->label_path_ = lable_path;
   this->Init();
 }
 
 RknnPool::~RknnPool() { this->DeInit(); }
 
 void RknnPool::Init() {
-  init_post_process();
+  init_post_process(this->label_path_);
   try {
     // 配置线程池
     this->pool_ = std::make_unique<ThreadPool>(this->thread_num_);

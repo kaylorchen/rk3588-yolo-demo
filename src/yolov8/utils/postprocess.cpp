@@ -69,11 +69,11 @@ static int loadLabelName(const char *locationFilename, char *label[]) {
   return 0;
 }
 
-int init_post_process() {
+int init_post_process(std::string &label_path) {
   int ret = 0;
-  ret = loadLabelName(LABEL_NALE_TXT_PATH, labels);
+  ret = loadLabelName(label_path.c_str(), labels);
   if (ret < 0) {
-    KAYLORDUT_LOG_ERROR("Load {} failed!\n", LABEL_NALE_TXT_PATH);
+    KAYLORDUT_LOG_ERROR("Load {} failed!", label_path);
     return -1;
   }
   return 0;

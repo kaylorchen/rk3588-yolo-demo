@@ -8,8 +8,9 @@
 #include "common.h"
 #include "rknn_api.h"
 #include <vector>
+#include <string>
 
-int init_post_process();
+int init_post_process(std::string &label_path);
 void deinit_post_process();
 const char *coco_cls_to_name(int cls_id);
 int post_process(rknn_app_context_t *app_ctx, rknn_output *outputs,
