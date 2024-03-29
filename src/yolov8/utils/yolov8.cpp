@@ -245,8 +245,15 @@ int Yolov8::Inference(void *image_buf, object_detect_result_list *od_results,
   const float nms_threshold = NMS_THRESH;       // 默认的NMS阈值
   const float box_conf_threshold = BOX_THRESH;  // 默认的置信度阈值
   // Post Process
-  post_process(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
-               nms_threshold, od_results);
+  // 分割的模型输出有13层
+  if (app_ctx_.io_num.n_output == 13) {
+    post_process_seg(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
+                     nms_threshold, od_results);
+  } else {
+    post_process(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
+                 nms_threshold, od_results);
+  }
+
 
   // Remeber to release rknn outputs_
   rknn_outputs_release(app_ctx_.rknn_ctx, app_ctx_.io_num.n_output,
