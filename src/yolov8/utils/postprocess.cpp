@@ -12,7 +12,7 @@
 #include "opencv2/opencv.hpp"
 #include "rknn_matmul_api.h"
 static char *labels[OBJ_CLASS_NUM];
-inline static int clamp(float val, int min, int max) {
+inline int clamp(float val, int min, int max) {
   return val > min ? (val < max ? val : max) : min;
 }
 static char *readLine(FILE *fp, char *buffer, int *len) {
@@ -617,8 +617,9 @@ static int process_fp32(rknn_output *all_input, int input_id, int grid_h,
 }
 
 int post_process_seg(rknn_app_context_t *app_ctx, rknn_output *outputs,
-                 letterbox_t *letter_box, float conf_threshold,
-                 float nms_threshold, object_detect_result_list *od_results) {
+                     letterbox_t *letter_box, float conf_threshold,
+                     float nms_threshold,
+                     object_detect_result_list *od_results) {
   std::vector<float> filterBoxes;
   std::vector<float> objProbs;
   std::vector<int> classId;
