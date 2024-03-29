@@ -7,7 +7,7 @@
 
 class Camera {
  public:
-  Camera(uint16_t index, cv::Size size, int framerate);
+  Camera(uint16_t index, cv::Size size, double framerate);
   ~Camera();
   std::unique_ptr<cv::Mat> GetNextFrame();
  private:

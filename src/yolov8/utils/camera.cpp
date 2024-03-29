@@ -6,7 +6,7 @@
 #include "kaylordut/log/logger.h"
 #include "thread"
 
-Camera::Camera(uint16_t index, cv::Size size, int framerate)
+Camera::Camera(uint16_t index, cv::Size size, double framerate)
   : capture_(index, cv::CAP_V4L2), size_(size) {
   KAYLORDUT_LOG_INFO("Instantiate a Camera object");
   // 这里使用V4L2捕获，因为使用默认的捕获不可以设置捕获的模式和帧率
@@ -23,7 +23,7 @@ Camera::Camera(uint16_t index, cv::Size size, int framerate)
   }
   capture_.set(cv::CAP_PROP_FRAME_WIDTH, size_.width);
   capture_.set(cv::CAP_PROP_FRAME_HEIGHT, size_.height);
-  if(!capture_.set(cv::CAP_PROP_FPS, 30.0)){
+  if(!capture_.set(cv::CAP_PROP_FPS, framerate)){
     KAYLORDUT_LOG_WARN("set framerate failed!!");
   }
   std::this_thread::sleep_for(std::chrono::seconds(1));
