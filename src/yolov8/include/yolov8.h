@@ -7,6 +7,7 @@
 #include "memory"
 #include "rknn_api.h"
 #include "string"
+#include "mutex"
 
 class Yolov8 {
  public:
@@ -25,4 +26,5 @@ private:
   std::string model_path_;
   std::unique_ptr<rknn_input[]> inputs_;
   std::unique_ptr<rknn_output[]> outputs_;
+  std::mutex outputs_lock_;
 };

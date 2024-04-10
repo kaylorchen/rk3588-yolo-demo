@@ -236,6 +236,7 @@ int Yolov8::Inference(void *image_buf, object_detect_result_list *od_results,
     outputs_[i].index = i;
     outputs_[i].want_float = (!app_ctx_.is_quant);
   }
+  outputs_lock_.lock();
   ret = rknn_outputs_get(app_ctx_.rknn_ctx, app_ctx_.io_num.n_output,
                          outputs_.get(), nullptr);
   if (ret != RKNN_SUCC) {
@@ -258,6 +259,7 @@ int Yolov8::Inference(void *image_buf, object_detect_result_list *od_results,
   // Remeber to release rknn outputs_
   rknn_outputs_release(app_ctx_.rknn_ctx, app_ctx_.io_num.n_output,
                        outputs_.get());
+  outputs_lock_.unlock();
   auto total_delta = std::chrono::duration_cast<std::chrono::milliseconds>(
       total_duration.DurationSinceLastTime());
   KAYLORDUT_LOG_DEBUG("Inference time is {}ms and total time is {}ms",
