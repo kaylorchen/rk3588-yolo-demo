@@ -114,13 +114,13 @@ static int nms(int validCount, std::vector<float> &outputLocations,
                std::vector<int> classIds, std::vector<int> &order, int filterId,
                float threshold) {
   for (int i = 0; i < validCount; ++i) {
-    if (order[i] == -1 || classIds[i] != filterId) {
+    if (order[i] == -1 || classIds[order[i]] != filterId) {
       continue;
     }
     int n = order[i];
     for (int j = i + 1; j < validCount; ++j) {
       int m = order[j];
-      if (m == -1 || classIds[i] != filterId) {
+      if (m == -1 || classIds[order[j]] != filterId) {
         continue;
       }
       float xmin0 = outputLocations[n * 4 + 0];
