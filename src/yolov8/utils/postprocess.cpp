@@ -425,7 +425,7 @@ static int process_i8(rknn_output *all_input, int input_id, int grid_h,
   if (input_id == 12) {
     /**
      * 获取第12层的输出数据，然后把量化后的数据还原到为原来的浮点型
-     * 需要注意的是，这里没有使用比例关系，因为程序需要时INT的数据，不需要0~1的float数据
+     * 需要注意的是，这里没有使用比例关系，因为程序需要是INT的数据，不需要0~1的float数据
      */
     int8_t *input_proto = (int8_t *)all_input[input_id].buf;
     int32_t zp_proto = app_ctx->output_attrs[input_id].zp;
@@ -620,9 +620,9 @@ int post_process_seg(rknn_app_context_t *app_ctx, rknn_output *outputs,
                      letterbox_t *letter_box, float conf_threshold,
                      float nms_threshold,
                      object_detect_result_list *od_results) {
-  std::vector<float> filterBoxes;
-  std::vector<float> objProbs;
-  std::vector<int> classId;
+  std::vector<float> filterBoxes; // 用来保存检测目标的box
+  std::vector<float> objProbs; // 保存该目标的得分
+  std::vector<int> classId; // 保留该目标的种类对应的index id
 
   std::vector<float> filterSegments;
   float proto[PROTO_CHANNEL * PROTO_HEIGHT * PROTO_WEIGHT];
