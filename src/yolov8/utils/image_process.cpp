@@ -48,7 +48,7 @@ std::unique_ptr<cv::Mat> ImageProcess::Convert(const cv::Mat &src) {
   cv::Mat resize_img;
   cv::resize(src, resize_img, new_size_);
   auto square_img = std::make_unique<cv::Mat>(target_size_, target_size_,
-                                              src.type(), cv::Scalar(0, 0, 0));
+                                              src.type(), cv::Scalar(114, 114, 114));
   cv::Point position(padding_x_ / 2, padding_y_ / 2);
   resize_img.copyTo((*square_img)(
       cv::Rect(position.x, position.y, resize_img.cols, resize_img.rows)));
