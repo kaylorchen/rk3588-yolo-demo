@@ -3,21 +3,24 @@
 //
 
 #pragma once
+#include "image_process.h"
+#include "opencv2/opencv.hpp"
+#include "queue"
 #include "threadpool.h"
 #include "yolov8.h"
-#include "queue"
-#include "opencv2/opencv.hpp"
-#include "image_process.h"
 class RknnPool {
  public:
-  RknnPool(const std::string model_path, const int thread_num, const std::string label_path);
+  RknnPool(const std::string model_path, const int thread_num,
+           const std::string label_path);
   ~RknnPool();
   void Init();
   void DeInit();
-  void AddInferenceTask(std::shared_ptr<cv::Mat> src, ImageProcess &image_process);
+  void AddInferenceTask(std::shared_ptr<cv::Mat> src,
+                        ImageProcess &image_process);
   int get_model_id();
   std::shared_ptr<cv::Mat> GetImageResultFromQueue();
   int GetTasksSize();
+
  private:
   int thread_num_{1};
   std::string model_path_{"null"};

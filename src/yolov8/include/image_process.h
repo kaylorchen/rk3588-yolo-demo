@@ -13,7 +13,7 @@ class ImageProcess {
   const letterbox_t &get_letter_box();
   void ImagePostProcess(cv::Mat &image, object_detect_result_list &od_results);
 
-private:
+ private:
   double scale_;
   int padding_x_;
   int padding_y_;

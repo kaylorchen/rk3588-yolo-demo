@@ -7,7 +7,8 @@
 #include "kaylordut/log/logger.h"
 #include "postprocess.h"
 
-RknnPool::RknnPool(const std::string model_path, const int thread_num, const std::string lable_path) {
+RknnPool::RknnPool(const std::string model_path, const int thread_num,
+                   const std::string lable_path) {
   this->thread_num_ = thread_num;
   this->model_path_ = model_path;
   this->label_path_ = lable_path;

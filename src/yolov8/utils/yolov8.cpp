@@ -267,6 +267,9 @@ int Yolov8::Inference(void *image_buf, object_detect_result_list *od_results,
   } else if (model_type_ == ModelType::DETECTION) {
     post_process(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
                  nms_threshold, od_results);
+  } else if (model_type_ == ModelType::OBB) {
+    post_process_obb(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
+                     nms_threshold, od_results);
   }
 
   // Remeber to release rknn outputs_
