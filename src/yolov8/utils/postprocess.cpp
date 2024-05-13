@@ -12,6 +12,7 @@
 #include "opencv2/opencv.hpp"
 #include "rknn_matmul_api.h"
 static char *labels[OBJ_CLASS_NUM];
+static int num_labels = 0;
 inline int clamp(float val, int min, int max) {
   return val > min ? (val < max ? val : max) : min;
 }
@@ -63,12 +64,13 @@ static int readLines(const char *fileName, char *lines[], int max_line) {
     if (i >= max_line) break;
   }
   fclose(file);
+  KAYLORDUT_LOG_INFO("There are {} lines", i);
   return i;
 }
 
 static int loadLabelName(const char *locationFilename, char *label[]) {
   KAYLORDUT_LOG_INFO("load lable {}", locationFilename);
-  readLines(locationFilename, label, OBJ_CLASS_NUM);
+  num_labels = readLines(locationFilename, label, OBJ_CLASS_NUM);
   return 0;
 }
 
@@ -83,7 +85,7 @@ int init_post_process(std::string &label_path) {
 }
 
 void deinit_post_process() {
-  for (int i = 0; i < OBJ_CLASS_NUM; i++) {
+  for (int i = 0; i < num_labels; i++) {
     if (labels[i] != nullptr) {
       free(labels[i]);
       labels[i] = nullptr;
@@ -92,7 +94,7 @@ void deinit_post_process() {
 }
 
 const char *coco_cls_to_name(int cls_id) {
-  if (cls_id >= OBJ_CLASS_NUM) {
+  if (cls_id >= num_labels) {
     return "null";
   }
   if (labels[cls_id]) {
@@ -475,7 +477,7 @@ static int process_i8(rknn_output *all_input, int input_id, int grid_h,
       }
 
       int8_t max_score = -score_zp;
-      for (int c = 0; c < OBJ_CLASS_NUM; c++) {  // 这里是为了保留最大的概率类别
+      for (int c = 0; c < num_labels; c++) {  // 这里是为了保留最大的概率类别
         if ((score_tensor[offset] > score_thres_i8) &&
             (score_tensor[offset] > max_score)) {
           max_score = score_tensor[offset];
@@ -570,7 +572,7 @@ static int process_fp32(rknn_output *all_input, int input_id, int grid_h,
       }
 
       float max_score = 0;
-      for (int c = 0; c < OBJ_CLASS_NUM; c++) {
+      for (int c = 0; c < num_labels; c++) {
         if ((score_tensor[offset] > threshold) &&
             (score_tensor[offset] > max_score)) {
           max_score = score_tensor[offset];
@@ -879,7 +881,7 @@ static int process_fp32(float *box_tensor, float *score_tensor,
       }
 
       float max_score = 0;
-      for (int c = 0; c < OBJ_CLASS_NUM; c++) {
+      for (int c = 0; c < num_labels; c++) {
         if ((score_tensor[offset] > threshold) &&
             (score_tensor[offset] > max_score)) {
           max_score = score_tensor[offset];
