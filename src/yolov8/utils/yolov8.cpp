@@ -139,6 +139,13 @@ int Yolov8::Init(rknn_context *ctx_in, bool copy_weight) {
   KAYLORDUT_LOG_INFO("output tensors:");
   rknn_tensor_attr output_attrs[io_num.n_output];
   memset(output_attrs, 0, sizeof(output_attrs));
+  // rk官方的segment模型有13个输出
+  if (io_num.n_output == 13) {
+    KAYLORDUT_LOG_INFO("this is a segment model")
+    model_type_ = ModelType::SEGMENT;
+  } else {
+    model_type_ = ModelType::DETECTION;
+  }
   for (int i = 0; i < io_num.n_output; i++) {
     output_attrs[i].index = i;
     ret = rknn_query(ctx_, RKNN_QUERY_OUTPUT_ATTR, &(output_attrs[i]),
@@ -148,6 +155,13 @@ int Yolov8::Init(rknn_context *ctx_in, bool copy_weight) {
       return -1;
     }
     dump_tensor_attr(&(output_attrs[i]));
+    if (i == 2) {
+      char *found = strstr(output_attrs[i].name, "angle");
+      if (found != NULL) {
+        KAYLORDUT_LOG_INFO("this is a OBB model");
+        model_type_ = ModelType::OBB;
+      }
+    }
   }
   // Set to context
   app_ctx_.rknn_ctx = ctx_;
@@ -247,14 +261,13 @@ int Yolov8::Inference(void *image_buf, object_detect_result_list *od_results,
   const float box_conf_threshold = BOX_THRESH;  // 默认的置信度阈值
   // Post Process
   // 分割的模型输出有13层
-  if (app_ctx_.io_num.n_output == 13) {
+  if (model_type_ == ModelType::SEGMENT) {
     post_process_seg(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
                      nms_threshold, od_results);
-  } else {
+  } else if (model_type_ == ModelType::DETECTION) {
     post_process(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
                  nms_threshold, od_results);
   }
-
 
   // Remeber to release rknn outputs_
   rknn_outputs_release(app_ctx_.rknn_ctx, app_ctx_.io_num.n_output,
