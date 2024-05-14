@@ -22,7 +22,7 @@ static char *readLine(FILE *fp, char *buffer, int *len) {
   int i = 0;
   size_t buff_len = 0;
 
-  buffer = (char *) malloc(buff_len + 1);
+  buffer = (char *)malloc(buff_len + 1);
   if (!buffer) return NULL;  // Out of memory
 
   while ((ch = fgetc(fp)) != '\n' && ch != EOF) {
@@ -32,9 +32,9 @@ static char *readLine(FILE *fp, char *buffer, int *len) {
       free(buffer);
       return NULL;  // Out of memory
     }
-    buffer = (char *) tmp;
+    buffer = (char *)tmp;
 
-    buffer[i] = (char) ch;
+    buffer[i] = (char)ch;
     i++;
   }
   buffer[i] = '\0';
@@ -110,7 +110,7 @@ static float CalculateOverlap(float xmin0, float ymin0, float xmax0,
   float h = fmax(0.f, fmin(ymax0, ymax1) - fmax(ymin0, ymin1) + 1.0);
   float i = w * h;
   float u = (xmax0 - xmin0 + 1.0) * (ymax0 - ymin0 + 1.0) +
-      (xmax1 - xmin1 + 1.0) * (ymax1 - ymin1 + 1.0) - i;
+            (xmax1 - xmin1 + 1.0) * (ymax1 - ymin1 + 1.0) - i;
   return u <= 0.f ? 0.f : (i / u);
 }
 static int nms(int validCount, std::vector<float> &outputLocations,
@@ -149,16 +149,17 @@ static int nms(int validCount, std::vector<float> &outputLocations,
 // 计算两个旋转矩形的IoU
 double rotatedRectIoU(const cv::RotatedRect &rect1,
                       const cv::RotatedRect &rect2) {
-//  KAYLORDUT_LOG_DEBUG("rotatedRectIoU is called");
+  //  KAYLORDUT_LOG_DEBUG("rotatedRectIoU is called");
   // 计算两个旋转矩形的交集
   std::vector<cv::Point2f> intersectingRegion;
   cv::rotatedRectangleIntersection(rect1, rect2, intersectingRegion);
   if (intersectingRegion.empty()) {
     return 0;
   }
-//  for (int i = 0; i < intersectingRegion.size(); ++i) {
-//    KAYLORDUT_LOG_DEBUG("data[{}] = ({} {})", i, intersectingRegion.at(i).x, intersectingRegion.at(i).y);
-//  }
+  //  for (int i = 0; i < intersectingRegion.size(); ++i) {
+  //    KAYLORDUT_LOG_DEBUG("data[{}] = ({} {})", i, intersectingRegion.at(i).x,
+  //    intersectingRegion.at(i).y);
+  //  }
 
   // 通过cv::contourArea计算交集区域面积
   double intersectionArea = cv::contourArea(intersectingRegion);
@@ -176,8 +177,9 @@ double rotatedRectIoU(const cv::RotatedRect &rect1,
 static int nms(int validCount, std::vector<float> &bboxes,
                std::vector<float> &angles, std::vector<int> classIds,
                std::vector<int> &order, int filterId, float threshold) {
-//  KAYLORDUT_LOG_DEBUG("nms is called");
-//  KAYLORDUT_LOG_DEBUG("validCount = {}, filterId = {}, threshold = {}", validCount, filterId, threshold);
+  //  KAYLORDUT_LOG_DEBUG("nms is called");
+  //  KAYLORDUT_LOG_DEBUG("validCount = {}, filterId = {}, threshold = {}",
+  //  validCount, filterId, threshold);
   for (int i = 0; i < validCount; ++i) {
     if (order[i] == -1 || classIds[order[i]] != filterId) {
       continue;
@@ -200,7 +202,7 @@ static int nms(int validCount, std::vector<float> &bboxes,
       }
     }
   }
-//  KAYLORDUT_LOG_DEBUG("nms finished");
+  //  KAYLORDUT_LOG_DEBUG("nms finished");
   return 0;
 }
 
@@ -252,12 +254,12 @@ static void matmul_by_npu_i8(std::vector<float> &A_input, float *B_input,
 
   int8_t int8Vector_A[ROWS_A * COLS_A];
   for (int i = 0; i < ROWS_A * COLS_A; ++i) {
-    int8Vector_A[i] = (int8_t) A_input[i];
+    int8Vector_A[i] = (int8_t)A_input[i];
   }
 
   int8_t int8Vector_B[COLS_A * COLS_B];
   for (int i = 0; i < COLS_A * COLS_B; ++i) {
-    int8Vector_B[i] = (int8_t) B_input[i];
+    int8Vector_B[i] = (int8_t)B_input[i];
   }
 
   int ret = rknn_matmul_create(&ctx, &info, &io_attr);
@@ -283,7 +285,7 @@ static void matmul_by_npu_i8(std::vector<float> &A_input, float *B_input,
     ret = rknn_matmul_run(ctx);
 
     for (int j = 0; j < COLS_B; ++j) {
-      if (((int32_t *) C->virt_addr)[j] > 0) {
+      if (((int32_t *)C->virt_addr)[j] > 0) {
         C_input[i * COLS_B + j] = 1;
       } else {
         C_input[i * COLS_B + j] = 0;
@@ -322,12 +324,12 @@ static void matmul_by_npu_fp16(std::vector<float> &A_input, float *B_input,
 
   rknpu2::float16 int8Vector_A[ROWS_A * COLS_A];
   for (int i = 0; i < ROWS_A * COLS_A; ++i) {
-    int8Vector_A[i] = (rknpu2::float16) A_input[i];
+    int8Vector_A[i] = (rknpu2::float16)A_input[i];
   }
 
   rknpu2::float16 int8Vector_B[COLS_A * COLS_B];
   for (int i = 0; i < COLS_A * COLS_B; ++i) {
-    int8Vector_B[i] = (rknpu2::float16) B_input[i];
+    int8Vector_B[i] = (rknpu2::float16)B_input[i];
   }
 
   int ret = rknn_matmul_create(&ctx, &info, &io_attr);
@@ -351,7 +353,7 @@ static void matmul_by_npu_fp16(std::vector<float> &A_input, float *B_input,
   // Run
   ret = rknn_matmul_run(ctx);
   for (int i = 0; i < ROWS_A * COLS_B; ++i) {
-    if (((float *) C->virt_addr)[i] > 0) {
+    if (((float *)C->virt_addr)[i] > 0) {
       C_input[i] = 1;
     } else {
       C_input[i] = 0;
@@ -438,16 +440,16 @@ inline static int32_t __clip(float val, float min, float max) {
 
 static int8_t qnt_f32_to_affine(float f32, int32_t zp, float scale) {
   float dst_val = (f32 / scale) + zp;
-  int8_t res = (int8_t) __clip(dst_val, -128, 127);
+  int8_t res = (int8_t)__clip(dst_val, -128, 127);
   return res;
 }
 
 static float deqnt_affine_to_f32(int8_t qnt, int32_t zp, float scale) {
-  return ((float) qnt - (float) zp) * scale;
+  return ((float)qnt - (float)zp) * scale;
 }
 
 static int box_reverse(int position, int boundary, int pad, float scale) {
-  return (int) ((clamp(position, 0, boundary) - pad) / scale);
+  return (int)((clamp(position, 0, boundary) - pad) / scale);
 }
 
 void compute_dfl(float *tensor, int dfl_len, float *box) {
@@ -487,7 +489,7 @@ static int process_i8(rknn_output *all_input, int input_id, int grid_h,
      * 获取第12层的输出数据，然后把量化后的数据还原到为原来的浮点型
      * 需要注意的是，这里没有使用比例关系，因为程序需要是INT的数据，不需要0~1的float数据
      */
-    int8_t *input_proto = (int8_t *) all_input[input_id].buf;
+    int8_t *input_proto = (int8_t *)all_input[input_id].buf;
     int32_t zp_proto = app_ctx->output_attrs[input_id].zp;
     for (int i = 0; i < PROTO_CHANNEL * PROTO_HEIGHT * PROTO_WEIGHT; i++) {
       proto[i] = input_proto[i] - zp_proto;
@@ -495,22 +497,22 @@ static int process_i8(rknn_output *all_input, int input_id, int grid_h,
     return validCount;
   }
 
-  int8_t *box_tensor = (int8_t *) all_input[input_id].buf;
+  int8_t *box_tensor = (int8_t *)all_input[input_id].buf;
   int32_t box_zp = app_ctx->output_attrs[input_id].zp;
   float box_scale = app_ctx->output_attrs[input_id].scale;
 
-  int8_t *score_tensor = (int8_t *) all_input[input_id + 1].buf;
+  int8_t *score_tensor = (int8_t *)all_input[input_id + 1].buf;
   int32_t score_zp = app_ctx->output_attrs[input_id + 1].zp;
   float score_scale = app_ctx->output_attrs[input_id + 1].scale;
 
   int8_t *score_sum_tensor = nullptr;
   int32_t score_sum_zp = 0;
   float score_sum_scale = 1.0;
-  score_sum_tensor = (int8_t *) all_input[input_id + 2].buf;
+  score_sum_tensor = (int8_t *)all_input[input_id + 2].buf;
   score_sum_zp = app_ctx->output_attrs[input_id + 2].zp;
   score_sum_scale = app_ctx->output_attrs[input_id + 2].scale;
 
-  int8_t *seg_tensor = (int8_t *) all_input[input_id + 3].buf;
+  int8_t *seg_tensor = (int8_t *)all_input[input_id + 3].buf;
   int32_t seg_zp = app_ctx->output_attrs[input_id + 3].zp;
   float seg_scale = app_ctx->output_attrs[input_id + 3].scale;
   // 计算得分阈值的量化之后的数值
@@ -541,8 +543,7 @@ static int process_i8(rknn_output *all_input, int input_id, int grid_h,
           max_score = score_tensor[offset];
           max_class_id = c;
         }
-        offset +=
-            grid_len;  // 计算 i * grid_w + j
+        offset += grid_len;  // 计算 i * grid_w + j
         // 这个像素点下，下一个类别偏移量，所以加上一个通道的长度即可
       }
 
@@ -550,7 +551,7 @@ static int process_i8(rknn_output *all_input, int input_id, int grid_h,
       if (max_score > score_thres_i8) {
         for (int k = 0; k < PROTO_CHANNEL; k++) {
           // 数据转换为int8， 因为数据是NCHW，所以步长需要grid_len才能拿到数据
-          int8_t seg_element_i8 = in_ptr_seg[(k) * grid_len] - seg_zp;
+          int8_t seg_element_i8 = in_ptr_seg[(k)*grid_len] - seg_zp;
           segments.push_back(seg_element_i8);
         }
 
@@ -602,17 +603,17 @@ static int process_fp32(rknn_output *all_input, int input_id, int grid_h,
   }
 
   if (input_id == 12) {
-    float *input_proto = (float *) all_input[input_id].buf;
+    float *input_proto = (float *)all_input[input_id].buf;
     for (int i = 0; i < PROTO_CHANNEL * PROTO_HEIGHT * PROTO_WEIGHT; i++) {
       proto[i] = input_proto[i];
     }
     return validCount;
   }
 
-  float *box_tensor = (float *) all_input[input_id].buf;
-  float *score_tensor = (float *) all_input[input_id + 1].buf;
-  float *score_sum_tensor = (float *) all_input[input_id + 2].buf;
-  float *seg_tensor = (float *) all_input[input_id + 3].buf;
+  float *box_tensor = (float *)all_input[input_id].buf;
+  float *score_tensor = (float *)all_input[input_id + 1].buf;
+  float *score_sum_tensor = (float *)all_input[input_id + 2].buf;
+  float *seg_tensor = (float *)all_input[input_id + 3].buf;
 
   for (int i = 0; i < grid_h; i++) {
     for (int j = 0; j < grid_w; j++) {
@@ -642,7 +643,7 @@ static int process_fp32(rknn_output *all_input, int input_id, int grid_h,
       // compute box
       if (max_score > threshold) {
         for (int k = 0; k < PROTO_CHANNEL; k++) {
-          float seg_element_f32 = in_ptr_seg[(k) * grid_len];
+          float seg_element_f32 = in_ptr_seg[(k)*grid_len];
           segments.push_back(seg_element_f32);
         }
 
@@ -837,9 +838,9 @@ int post_process_seg(rknn_app_context_t *app_ctx, rknn_output *outputs,
   int ori_in_height = (model_in_h - letter_box->y_pad * 2) / letter_box->scale;
   int ori_in_width = (model_in_w - letter_box->x_pad * 2) / letter_box->scale;
   uint8_t *cropped_seg_mask =
-      (uint8_t *) malloc(cropped_height * cropped_width * sizeof(uint8_t));
+      (uint8_t *)malloc(cropped_height * cropped_width * sizeof(uint8_t));
   uint8_t *real_seg_mask =
-      (uint8_t *) malloc(ori_in_height * ori_in_width * sizeof(uint8_t));
+      (uint8_t *)malloc(ori_in_height * ori_in_width * sizeof(uint8_t));
   // 还原到原来的图像分辨率，结果保存到real_seg_mask中，使用od_results->results_seg[0].seg_mask记录
   seg_reverse(all_mask_in_one, cropped_seg_mask, real_seg_mask, model_in_h,
               model_in_w, PROTO_HEIGHT, PROTO_WEIGHT, cropped_height,
@@ -858,7 +859,7 @@ static int process_i8_obb(int8_t *box_tensor, int32_t box_zp, float box_scale,
                           std::vector<float> &boxes, std::vector<float> &angles,
                           std::vector<float> &objProbs,
                           std::vector<int> &classId, float threshold) {
-//  KAYLORDUT_LOG_DEBUG("process_i8_obb is called");
+  //  KAYLORDUT_LOG_DEBUG("process_i8_obb is called");
   int validCount = 0;
   int grid_len = grid_h * grid_w;
   int8_t score_thres_i8 = qnt_f32_to_affine(threshold, score_zp, score_scale);
@@ -874,10 +875,11 @@ static int process_i8_obb(int8_t *box_tensor, int32_t box_zp, float box_scale,
             (score_tensor[offset] > max_score)) {
           max_score = score_tensor[offset];
           max_class_id = c;
-          KAYLORDUT_LOG_INFO("threshold is {}, {} score is {}",
-                              threshold,
-                              coco_cls_to_name(c),
-                              deqnt_affine_to_f32(score_tensor[offset], score_zp, score_scale));
+          //          KAYLORDUT_LOG_INFO("threshold is {}, {} score is {}",
+          //                              threshold,
+          //                              coco_cls_to_name(c),
+          //                              deqnt_affine_to_f32(score_tensor[offset],
+          //                              score_zp, score_scale));
         }
         offset += grid_len;
       }
@@ -894,21 +896,36 @@ static int process_i8_obb(int8_t *box_tensor, int32_t box_zp, float box_scale,
         }
         compute_dfl(before_dfl, dfl_len, box);
 
-        float x1, y1, x2, y2, w, h;
-        x1 = (-box[0] + j + 0.5) * stride;
-        y1 = (-box[1] + i + 0.5) * stride;
-        x2 = (box[2] + j + 0.5) * stride;
-        y2 = (box[3] + i + 0.5) * stride;
-        w = x2 - x1;
-        h = y2 - y1;
-        boxes.push_back(x1);
-        boxes.push_back(y1);
+        //        float x1, y1, x2, y2, w, h;
+        //        x1 = (-box[0] + j + 0.5) * stride;
+        //        y1 = (-box[1] + i + 0.5) * stride;
+        //        x2 = (box[2] + j + 0.5) * stride;
+        //        y2 = (box[3] + i + 0.5) * stride;
+        //        w = x2 - x1;
+        //        h = y2 - y1;
+        offset = i * grid_w + j;
+        float delta_x1, delta_y1, delta_x2, delta_y2;
+        float theta =
+            deqnt_affine_to_f32(angle_tensor[offset], angle_zp, angle_scale);
+        //        KAYLORDUT_LOG_DEBUG("theta = {}", theta);
+        delta_x1 = box[0];
+        delta_y1 = box[1];
+        delta_x2 = box[2];
+        delta_y2 = box[3];
+        float xf = (delta_x2 - delta_x1) / 2.0f;
+        float yf = (delta_y2 - delta_y1) / 2.0f;
+        float x = xf * cos(theta) - yf * sin(theta);
+        float y = xf * sin(theta) + yf * cos(theta);
+        x = (x + j + 0.5) * stride;
+        y = (y + i + 0.5) * stride;
+        float w = (delta_x1 + delta_x2) * stride;
+        float h = (delta_y1 + delta_y2) * stride;
+        boxes.push_back(x);
+        boxes.push_back(y);
         boxes.push_back(w);
         boxes.push_back(h);
 
-        offset = i * grid_w + j;
-        angles.push_back(
-            deqnt_affine_to_f32(angle_tensor[offset], angle_zp, angle_scale));
+        angles.push_back(theta);
         objProbs.push_back(
             deqnt_affine_to_f32(max_score, score_zp, score_scale));
         classId.push_back(max_class_id);
@@ -916,7 +933,7 @@ static int process_i8_obb(int8_t *box_tensor, int32_t box_zp, float box_scale,
       }
     }
   }
-//  KAYLORDUT_LOG_DEBUG("process_i8_obb finished");
+  //  KAYLORDUT_LOG_DEBUG("process_i8_obb finished");
   return validCount;
 }
 
@@ -1086,16 +1103,16 @@ int post_process(rknn_app_context_t *app_ctx, rknn_output *outputs,
 
     if (app_ctx->is_quant) {
       validCount += process_i8(
-          (int8_t *) outputs[box_idx].buf, app_ctx->output_attrs[box_idx].zp,
+          (int8_t *)outputs[box_idx].buf, app_ctx->output_attrs[box_idx].zp,
           app_ctx->output_attrs[box_idx].scale,
-          (int8_t *) outputs[score_idx].buf, app_ctx->output_attrs[score_idx].zp,
-          app_ctx->output_attrs[score_idx].scale, (int8_t *) score_sum,
+          (int8_t *)outputs[score_idx].buf, app_ctx->output_attrs[score_idx].zp,
+          app_ctx->output_attrs[score_idx].scale, (int8_t *)score_sum,
           score_sum_zp, score_sum_scale, grid_h, grid_w, stride, dfl_len,
           filterBoxes, objProbs, classId, conf_threshold);
     } else {
       validCount += process_fp32(
-          (float *) outputs[box_idx].buf, (float *) outputs[score_idx].buf,
-          (float *) score_sum, grid_h, grid_w, stride, dfl_len, filterBoxes,
+          (float *)outputs[box_idx].buf, (float *)outputs[score_idx].buf,
+          (float *)score_sum, grid_h, grid_w, stride, dfl_len, filterBoxes,
           objProbs, classId, conf_threshold);
     }
   }
@@ -1134,13 +1151,13 @@ int post_process(rknn_app_context_t *app_ctx, rknn_output *outputs,
     float obj_conf = objProbs[i];
 
     od_results->results[last_count].box.left =
-        (int) (clamp(x1, 0, model_in_w) / letter_box->scale);
+        (int)(clamp(x1, 0, model_in_w) / letter_box->scale);
     od_results->results[last_count].box.top =
-        (int) (clamp(y1, 0, model_in_h) / letter_box->scale);
+        (int)(clamp(y1, 0, model_in_h) / letter_box->scale);
     od_results->results[last_count].box.right =
-        (int) (clamp(x2, 0, model_in_w) / letter_box->scale);
+        (int)(clamp(x2, 0, model_in_w) / letter_box->scale);
     od_results->results[last_count].box.bottom =
-        (int) (clamp(y2, 0, model_in_h) / letter_box->scale);
+        (int)(clamp(y2, 0, model_in_h) / letter_box->scale);
     od_results->results[last_count].prop = obj_conf;
     od_results->results[last_count].cls_id = id;
     last_count++;
@@ -1181,11 +1198,11 @@ int post_process_obb(rknn_app_context_t *app_ctx, rknn_output *outputs,
 
     if (app_ctx->is_quant) {
       validCount += process_i8_obb(
-          (int8_t *) outputs[box_idx].buf, app_ctx->output_attrs[box_idx].zp,
+          (int8_t *)outputs[box_idx].buf, app_ctx->output_attrs[box_idx].zp,
           app_ctx->output_attrs[box_idx].scale,
-          (int8_t *) outputs[score_idx].buf, app_ctx->output_attrs[score_idx].zp,
+          (int8_t *)outputs[score_idx].buf, app_ctx->output_attrs[score_idx].zp,
           app_ctx->output_attrs[score_idx].scale,
-          (int8_t *) outputs[angle_idx].buf, app_ctx->output_attrs[angle_idx].zp,
+          (int8_t *)outputs[angle_idx].buf, app_ctx->output_attrs[angle_idx].zp,
           app_ctx->output_attrs[angle_idx].scale, grid_h, grid_w, stride,
           dfl_len, filterBoxes, angles, objProbs, classId, conf_threshold);
     } else {
@@ -1242,19 +1259,22 @@ int post_process_obb(rknn_app_context_t *app_ctx, rknn_output *outputs,
     //        (int)(clamp(w, 0, model_in_w) / letter_box->scale);
     //    od_results->results_obb[last_count].box.h =
     //        (int)(clamp(h, 0, model_in_h) / letter_box->scale);
-    od_results->results_obb[last_count].box.x = (int) (x / letter_box->scale);
-    od_results->results_obb[last_count].box.y = (int) (y / letter_box->scale);
-    od_results->results_obb[last_count].box.w = (int) (w / letter_box->scale);
-    od_results->results_obb[last_count].box.h = (int) (h / letter_box->scale);
-//    od_results->results_obb[last_count].box.theta = theta;
-    od_results->results_obb[last_count].box.theta = 0;
+    od_results->results_obb[last_count].box.x = (int)(x / letter_box->scale);
+    od_results->results_obb[last_count].box.y = (int)(y / letter_box->scale);
+    od_results->results_obb[last_count].box.w = (int)(w / letter_box->scale);
+    od_results->results_obb[last_count].box.h = (int)(h / letter_box->scale);
+    od_results->results_obb[last_count].box.theta = theta;
+    //    od_results->results_obb[last_count].box.theta = 0;
     od_results->results_obb[last_count].prop = obj_conf;
     od_results->results_obb[last_count].cls_id = id;
-    KAYLORDUT_LOG_INFO("label is {}, and confidence is {}, xywhθ = ({} {} {} {} {})", coco_cls_to_name(id), obj_conf,od_results->results_obb[last_count].box.x,
-                       od_results->results_obb[last_count].box.y,
-                       od_results->results_obb[last_count].box.w,
-                       od_results->results_obb[last_count].box.h,
-                       od_results->results_obb[last_count].box.theta);
+    KAYLORDUT_LOG_INFO(
+        "label is {}, and confidence is {}, xywhθ = ({} {} {} {} {})",
+        coco_cls_to_name(id), obj_conf,
+        od_results->results_obb[last_count].box.x,
+        od_results->results_obb[last_count].box.y,
+        od_results->results_obb[last_count].box.w,
+        od_results->results_obb[last_count].box.h,
+        od_results->results_obb[last_count].box.theta);
     last_count++;
   }
   od_results->count = last_count;
