@@ -268,9 +268,14 @@ int Yolov8::Inference(void *image_buf, object_detect_result_list *od_results,
     post_process(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
                  nms_threshold, od_results);
   } else if (model_type_ == ModelType::OBB) {
+    KAYLORDUT_LOG_DEBUG("model_type is obb");
+    KAYLORDUT_TIME_COST_INFO(
+        "post_process obb",
     post_process_obb(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
                      nms_threshold, od_results);
+    );
   }
+  od_results->model_type = model_type_;
 
   // Remeber to release rknn outputs_
   rknn_outputs_release(app_ctx_.rknn_ctx, app_ctx_.io_num.n_output,

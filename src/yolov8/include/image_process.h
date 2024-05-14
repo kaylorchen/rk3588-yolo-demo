@@ -20,4 +20,6 @@ class ImageProcess {
   cv::Size new_size_;
   int target_size_;
   letterbox_t letterbox_;
+  void ProcessDetectionImage(cv::Mat &image, object_detect_result_list &od_results) const;
+  void ProcessOBBImage(cv::Mat &image, const object_detect_result_list &od_results) const;
 };

@@ -9,12 +9,7 @@
 #include "rknn_api.h"
 #include "string"
 
-enum ModelType {
-  UNKNOWN = 0,
-  SEGMENT = 1,
-  DETECTION = 2,
-  OBB = 3,
-};
+
 
 class Yolov8 {
  public:

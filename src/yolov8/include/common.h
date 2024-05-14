@@ -8,10 +8,16 @@
 #define OBJ_NUMB_MAX_SIZE 128
 #define OBJ_CLASS_NUM 80
 #define NMS_THRESH 0.45
-#define BOX_THRESH 0.25
+#define BOX_THRESH 0.35
 #define PROTO_CHANNEL (32)
 #define PROTO_HEIGHT (160)
 #define PROTO_WEIGHT (160)
+enum ModelType {
+  UNKNOWN = 0,
+  SEGMENT = 1,
+  DETECTION = 2,
+  OBB = 3,
+};
 /**
  * @brief LetterBox
  *
@@ -30,7 +36,7 @@ typedef struct {
   int y;
   int w;
   int h;
-  int theta;
+  float theta;
 } image_xywht_t;
 
 typedef struct {
@@ -59,9 +65,10 @@ typedef struct {
 typedef struct {
   int id;
   int count;
+  ModelType model_type;
   object_detect_result results[OBJ_NUMB_MAX_SIZE];
   object_segment_result results_seg[OBJ_NUMB_MAX_SIZE];
-  object_detect_result result_obb[OBJ_NUMB_MAX_SIZE];
+  object_obb_result results_obb[OBJ_NUMB_MAX_SIZE];
 } object_detect_result_list;
 
 typedef struct {
