@@ -72,19 +72,19 @@ void ImageProcess::ImagePostProcess(cv::Mat &image,
         for (int k = 0; k < width; k++) {
           int pixel_offset = 3 * (j * width + k);
           if (seg_mask[j * width + k] != 0) {
-            ori_img[pixel_offset + 0] = (unsigned char) clamp(
+            ori_img[pixel_offset + 0] = (unsigned char)clamp(
                 class_colors[seg_mask[j * width + k] % N_CLASS_COLORS][0] *
-                    (1 - alpha) +
+                        (1 - alpha) +
                     ori_img[pixel_offset + 0] * alpha,
                 0, 255);  // r
-            ori_img[pixel_offset + 1] = (unsigned char) clamp(
+            ori_img[pixel_offset + 1] = (unsigned char)clamp(
                 class_colors[seg_mask[j * width + k] % N_CLASS_COLORS][1] *
-                    (1 - alpha) +
+                        (1 - alpha) +
                     ori_img[pixel_offset + 1] * alpha,
                 0, 255);  // g
-            ori_img[pixel_offset + 2] = (unsigned char) clamp(
+            ori_img[pixel_offset + 2] = (unsigned char)clamp(
                 class_colors[seg_mask[j * width + k] % N_CLASS_COLORS][2] *
-                    (1 - alpha) +
+                        (1 - alpha) +
                     ori_img[pixel_offset + 2] * alpha,
                 0, 255);  // b
           }
@@ -98,17 +98,13 @@ void ImageProcess::ImagePostProcess(cv::Mat &image,
     ProcessDetectionImage(image, od_results);
   } else if (od_results.model_type == ModelType::OBB) {
     ProcessOBBImage(image, od_results);
+  } else if (od_results.model_type == ModelType::POSE) {
+    ProcessPoseImage(image, od_results);
   }
 }
 
-void DrawRotatedRect(cv::Mat &image,
-                     float x,
-                     float y,
-                     float w,
-                     float h,
-                     float theta,
-                     const cv::Scalar &color,
-                     int thickness) {
+void DrawRotatedRect(cv::Mat &image, float x, float y, float w, float h,
+                     float theta, const cv::Scalar &color, int thickness) {
   // 定义旋转矩形的中心，尺寸和旋转角度
   cv::Point2f center(x, y);
   cv::Size2f size(w, h);
@@ -126,30 +122,25 @@ void DrawRotatedRect(cv::Mat &image,
   }
 }
 
-void ImageProcess::ProcessOBBImage(cv::Mat &image, const object_detect_result_list &od_results) const {
-  KAYLORDUT_LOG_INFO("ImageProcess::ProcessOBBImage is called, result count is {}",od_results.count);
+void ImageProcess::ProcessOBBImage(
+    cv::Mat &image, const object_detect_result_list &od_results) const {
+  KAYLORDUT_LOG_INFO(
+      "ImageProcess::ProcessOBBImage is called, result count is {}",
+      od_results.count);
   for (int i = 0; i < od_results.count; ++i) {
     auto obb_result = od_results.results_obb[i];
     KAYLORDUT_LOG_INFO("{} @ xywhθ = ({} {} {} {} {}) {}",
-                       coco_cls_to_name(obb_result.cls_id),
-                       obb_result.box.x,
-                       obb_result.box.y,
-                       obb_result.box.w,
-                       obb_result.box.h,
-                       obb_result.box.theta * 180.0 / CV_PI,
-                       obb_result.prop);
-    DrawRotatedRect(image,
-                    obb_result.box.x,
-                    obb_result.box.y,
-                    obb_result.box.w,
-                    obb_result.box.h,
-                    obb_result.box.theta * 180.0 / CV_PI,
-                    cv::Scalar(0, 255, 0),
-                    2);
+                       coco_cls_to_name(obb_result.cls_id), obb_result.box.x,
+                       obb_result.box.y, obb_result.box.w, obb_result.box.h,
+                       obb_result.box.theta * 180.0 / CV_PI, obb_result.prop);
+    DrawRotatedRect(image, obb_result.box.x, obb_result.box.y, obb_result.box.w,
+                    obb_result.box.h, obb_result.box.theta * 180.0 / CV_PI,
+                    cv::Scalar(0, 255, 0), 2);
   }
 }
 
-void ImageProcess::ProcessDetectionImage(cv::Mat &image, object_detect_result_list &od_results) const {
+void ImageProcess::ProcessDetectionImage(
+    cv::Mat &image, object_detect_result_list &od_results) const {
   for (int i = 0; i < od_results.count; ++i) {
     object_detect_result *detect_result = &(od_results.results[i]);
     //    if (strcmp(coco_cls_to_name(detect_result->cls_id), "person") == 0){
@@ -170,5 +161,66 @@ void ImageProcess::ProcessDetectionImage(cv::Mat &image, object_detect_result_li
                 cv::Point(detect_result->box.left, detect_result->box.top + 20),
                 cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 0, 0), 2,
                 cv::LINE_8);
+  }
+}
+
+void drawSkeleton(cv::Mat &img, const std::vector<cv::Point> &points,
+                  const std::vector<int> &pairs, const cv::Scalar &color,
+                  int thickness) {
+  for (size_t i = 0; i < pairs.size(); i += 2) {
+    int index1 = pairs[i];
+    int index2 = pairs[i + 1];
+    if (points[index1].x != -1 && points[index1].y != -1 &&
+        points[index2].x != -1 && points[index2].y != -1) {
+      cv::line(img, points[index1], points[index2], color, thickness);
+    }
+  }
+}
+
+void ImageProcess::ProcessPoseImage(
+    cv::Mat &image, object_detect_result_list &od_results) const {
+  for (int i = 0; i < od_results.count; ++i) {
+    object_detect_result *detect_result = &(od_results.results[i]);
+
+    KAYLORDUT_LOG_INFO("({} {} {} {}) {}", detect_result->box.left,
+                       detect_result->box.top, detect_result->box.right,
+                       detect_result->box.bottom, detect_result->prop);
+    cv::rectangle(
+        image, cv::Point(detect_result->box.left, detect_result->box.top),
+        cv::Point(detect_result->box.right, detect_result->box.bottom),
+        cv::Scalar(0, 0, 255), 2);
+    std::vector<cv::Point> points(17);
+    for (int j = 0; j < 17; ++j) {
+      if (od_results.results_pose[i].visibility[j] <= 0.6) {
+        points.at(j) = cv::Point(-1, -1);
+        continue;
+      }
+      points.at(j) = (cv::Point(od_results.results_pose[i].kpt[j * 2 + 0],
+                                od_results.results_pose[i].kpt[j * 2 + 1]));
+      cv::Point p(od_results.results_pose[i].kpt[j * 2 + 0],
+                  od_results.results_pose[i].kpt[j * 2 + 1]);
+      cv::circle(image, p, 10, cv::Scalar(0, 0, 255), cv::FILLED, cv::LINE_AA);
+    }
+    std::vector<int> pairs = {
+        0,  1,   // Nose to left eye
+        1,  3,   // Left eye to left ear
+        0,  2,   // Nose to right eye
+        2,  4,   // Right eye to right ear
+        0,  5,   // Nose to left shoulder
+        5,  7,   // Left shoulder to left elbow
+        7,  9,   // Left elbow to left wrist
+        0,  6,   // Nose to right shoulder
+        6,  8,   // Right shoulder to right elbow
+        8,  10,  // Right elbow to right wrist
+        5,  6,   // Left shoulder to right shoulder
+        11, 12,  // Left hip to right hip
+        11, 5,   // Left hip to left shoulder
+        12, 6,   // Right hip to right shoulder
+        11, 13,  // Left hip to left knee
+        12, 14,  // Right hip to right knee
+        13, 15,  // Left knee to left ankle
+        14, 16   // Right knee to right ankle
+    };
+    drawSkeleton(image, points, pairs, cv::Scalar(255, 0, 0), 2);
   }
 }

@@ -9,8 +9,6 @@
 #include "rknn_api.h"
 #include "string"
 
-
-
 class Yolov8 {
  public:
   Yolov8(std::string &&model_path);

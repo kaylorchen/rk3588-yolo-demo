@@ -161,6 +161,11 @@ int Yolov8::Init(rknn_context *ctx_in, bool copy_weight) {
         KAYLORDUT_LOG_INFO("this is a OBB model");
         model_type_ = ModelType::OBB;
       }
+      found = strstr(output_attrs[i].name, "kpt");
+      if (found != NULL) {
+        KAYLORDUT_LOG_INFO("this is a POSE model");
+        model_type_ = ModelType::POSE;
+      }
     }
   }
   // Set to context
@@ -268,12 +273,13 @@ int Yolov8::Inference(void *image_buf, object_detect_result_list *od_results,
     post_process(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
                  nms_threshold, od_results);
   } else if (model_type_ == ModelType::OBB) {
-    KAYLORDUT_LOG_DEBUG("model_type is obb");
     KAYLORDUT_TIME_COST_INFO(
         "post_process obb",
-    post_process_obb(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
-                     nms_threshold, od_results);
-    );
+        post_process_obb(&app_ctx_, outputs_.get(), &letter_box,
+                         box_conf_threshold, nms_threshold, od_results););
+  } else if (model_type_ == ModelType::POSE) {
+    post_process_pose(&app_ctx_, outputs_.get(), &letter_box,
+                      box_conf_threshold, nms_threshold, od_results);
   }
   od_results->model_type = model_type_;
 

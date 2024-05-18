@@ -84,12 +84,11 @@ int main(int argc, char *argv[]) {
       options.model_path, options.thread_count, options.label_path);
   std::unique_ptr<cv::Mat> image = std::make_unique<cv::Mat>();
   *image = cv::imread(options.input_filename);
-  if (image->empty()){
+  if (image->empty()) {
     KAYLORDUT_LOG_ERROR("read image error");
     return -1;
   }
-  ImageProcess image_process(image->cols,
-                             image->rows, 640);
+  ImageProcess image_process(image->cols, image->rows, 640);
 
   std::shared_ptr<cv::Mat> image_res;
   uint8_t running_flag = 0;
@@ -97,12 +96,13 @@ int main(int argc, char *argv[]) {
   static int image_count = 0;
   static int image_res_count = 0;
   rknn_pool->AddInferenceTask(std::move(image), image_process);
-  while(image_res == nullptr){
+  while (image_res == nullptr) {
     image_res = rknn_pool->GetImageResultFromQueue();
   }
   cv::imshow("Image demo", *image_res);
   cv::waitKey(0);
   rknn_pool.reset();
   cv::destroyAllWindows();
+  cv::imwrite("result_" + options.input_filename, *image_res);
   return 0;
 }

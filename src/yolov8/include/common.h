@@ -17,6 +17,7 @@ enum ModelType {
   SEGMENT = 1,
   DETECTION = 2,
   OBB = 3,
+  POSE = 4,
 };
 /**
  * @brief LetterBox
@@ -31,6 +32,12 @@ typedef struct {
  * @brief Image rectangle
  *
  */
+
+typedef struct {
+  float kpt[34];
+  float visibility[17];
+} object_pose_result;
+
 typedef struct {
   int x;
   int y;
@@ -69,6 +76,7 @@ typedef struct {
   object_detect_result results[OBJ_NUMB_MAX_SIZE];
   object_segment_result results_seg[OBJ_NUMB_MAX_SIZE];
   object_obb_result results_obb[OBJ_NUMB_MAX_SIZE];
+  object_pose_result results_pose[OBJ_NUMB_MAX_SIZE];
 } object_detect_result_list;
 
 typedef struct {

@@ -113,6 +113,40 @@ static float CalculateOverlap(float xmin0, float ymin0, float xmax0,
             (xmax1 - xmin1 + 1.0) * (ymax1 - ymin1 + 1.0) - i;
   return u <= 0.f ? 0.f : (i / u);
 }
+
+static int nms(int validCount, std::vector<float> &outputLocations,
+               std::vector<int> &order, float threshold) {
+  for (int i = 0; i < validCount; ++i) {
+    if (order[i] == -1) {
+      continue;
+    }
+    int n = order[i];
+    for (int j = i + 1; j < validCount; ++j) {
+      int m = order[j];
+      if (m == -1) {
+        continue;
+      }
+      float xmin0 = outputLocations[n * 4 + 0];
+      float ymin0 = outputLocations[n * 4 + 1];
+      float xmax0 = outputLocations[n * 4 + 0] + outputLocations[n * 4 + 2];
+      float ymax0 = outputLocations[n * 4 + 1] + outputLocations[n * 4 + 3];
+
+      float xmin1 = outputLocations[m * 4 + 0];
+      float ymin1 = outputLocations[m * 4 + 1];
+      float xmax1 = outputLocations[m * 4 + 0] + outputLocations[m * 4 + 2];
+      float ymax1 = outputLocations[m * 4 + 1] + outputLocations[m * 4 + 3];
+
+      float iou = CalculateOverlap(xmin0, ymin0, xmax0, ymax0, xmin1, ymin1,
+                                   xmax1, ymax1);
+
+      if (iou > threshold) {
+        order[j] = -1;
+      }
+    }
+  }
+  return 0;
+}
+
 static int nms(int validCount, std::vector<float> &outputLocations,
                std::vector<int> classIds, std::vector<int> &order, int filterId,
                float threshold) {
@@ -870,6 +904,7 @@ static int process_i8_obb(int8_t *box_tensor, int32_t box_zp, float box_scale,
       int max_class_id = -1;
 
       int8_t max_score = -score_zp;
+
       for (int c = 0; c < num_labels; c++) {
         if ((score_tensor[offset] > score_thres_i8) &&
             (score_tensor[offset] > max_score)) {
@@ -937,6 +972,83 @@ static int process_i8_obb(int8_t *box_tensor, int32_t box_zp, float box_scale,
   return validCount;
 }
 
+static int process_i8_pose(int8_t *box_tensor, int32_t box_zp, float box_scale,
+                           int8_t *score_tensor, int32_t score_zp,
+                           float score_scale, int8_t *kpt_tensor,
+                           int32_t kpt_zp, float kpt_scale,
+                           int8_t *visibility_tensor, int32_t visibility_zp,
+                           float visibility_scale, int grid_h, int grid_w,
+                           int stride, int dfl_len, std::vector<float> &boxes,
+                           std::vector<float> &objProbs,
+                           std::vector<float> &kpt,
+                           std::vector<float> &visibilities, float threshold) {
+  int validCount = 0;
+  int grid_len = grid_h * grid_w;
+  int8_t score_thres_i8 = qnt_f32_to_affine(threshold, score_zp, score_scale);
+
+  for (int i = 0; i < grid_h; i++) {
+    for (int j = 0; j < grid_w; j++) {
+      int offset = i * grid_w + j;
+      int max_class_id = -1;
+
+      int8_t max_score = -score_zp;
+      for (int c = 0; c < num_labels; c++) {
+        if ((score_tensor[offset] > score_thres_i8) &&
+            (score_tensor[offset] > max_score)) {
+          max_score = score_tensor[offset];
+          max_class_id = c;
+        }
+        offset += grid_len;
+      }
+
+      // compute box
+      if (max_score > score_thres_i8) {
+        offset = i * grid_w + j;
+        float box[4];
+        float before_dfl[dfl_len * 4];
+        for (int k = 0; k < dfl_len * 4; k++) {
+          before_dfl[k] =
+              deqnt_affine_to_f32(box_tensor[offset], box_zp, box_scale);
+          offset += grid_len;
+        }
+        compute_dfl(before_dfl, dfl_len, box);
+
+        float x1, y1, x2, y2, w, h;
+        x1 = (-box[0] + j + 0.5) * stride;
+        y1 = (-box[1] + i + 0.5) * stride;
+        x2 = (box[2] + j + 0.5) * stride;
+        y2 = (box[3] + i + 0.5) * stride;
+        w = x2 - x1;
+        h = y2 - y1;
+        boxes.push_back(x1);
+        boxes.push_back(y1);
+        boxes.push_back(w);
+        boxes.push_back(h);
+
+        objProbs.push_back(
+            deqnt_affine_to_f32(max_score, score_zp, score_scale));
+        offset = i * grid_w + j;
+        for (int k = 0; k < 17; ++k) {
+          auto kpt_x = *(kpt_tensor + offset + 2 * k * grid_len);
+          auto kpt_y = *(kpt_tensor + offset + (2 * k + 1) * grid_len);
+          auto kpt_visibility = *(visibility_tensor + offset + k * grid_len);
+          auto res_kpt_x = deqnt_affine_to_f32(kpt_x, kpt_zp, kpt_scale);
+          auto res_kpt_y = deqnt_affine_to_f32(kpt_y, kpt_zp, kpt_scale);
+          auto res_kpt_visibility = deqnt_affine_to_f32(
+              kpt_visibility, visibility_zp, visibility_scale);
+          KAYLORDUT_LOG_INFO("count = {}, offset = {}, kpt = ({} {} {})",
+                             validCount, offset, res_kpt_x, res_kpt_y,
+                             res_kpt_visibility);
+          kpt.push_back(res_kpt_x);
+          kpt.push_back(res_kpt_y);
+          visibilities.push_back(res_kpt_visibility);
+        }
+        validCount++;
+      }
+    }
+  }
+  return validCount;
+}
 static int process_i8(int8_t *box_tensor, int32_t box_zp, float box_scale,
                       int8_t *score_tensor, int32_t score_zp, float score_scale,
                       int8_t *score_sum_tensor, int32_t score_sum_zp,
@@ -1065,6 +1177,112 @@ static int process_fp32(float *box_tensor, float *score_tensor,
     }
   }
   return validCount;
+}
+
+int post_process_pose(rknn_app_context_t *app_ctx, rknn_output *outputs,
+                      letterbox_t *letter_box, float conf_threshold,
+                      float nms_threshold,
+                      object_detect_result_list *od_results) {
+  std::vector<float> filterBoxes;
+  std::vector<float> objProbs;
+  std::vector<float> kpt;
+  std::vector<float> visibilities;
+  int validCount = 0;
+  int stride = 0;
+  int grid_h = 0;
+  int grid_w = 0;
+  int model_in_w = app_ctx->model_width;
+  int model_in_h = app_ctx->model_height;
+
+  memset(od_results, 0, sizeof(object_detect_result_list));
+
+  // default 3 branch
+  int dfl_len = app_ctx->output_attrs[0].dims[1] / 4;
+  int output_per_branch = app_ctx->io_num.n_output / 3;
+  for (int i = 0; i < 3; i++) {
+    int box_idx = i * output_per_branch;
+    int score_idx = i * output_per_branch + 1;
+    int kpt_idx = i * output_per_branch + 2;
+    int visibilities_idx = i * output_per_branch + 3;
+
+    grid_h = app_ctx->output_attrs[box_idx].dims[2];
+    grid_w = app_ctx->output_attrs[box_idx].dims[3];
+    num_labels = app_ctx->output_attrs[score_idx].dims[1];
+    stride = model_in_h / grid_h;
+
+    if (app_ctx->is_quant) {
+      validCount += process_i8_pose(
+          (int8_t *)outputs[box_idx].buf, app_ctx->output_attrs[box_idx].zp,
+          app_ctx->output_attrs[box_idx].scale,
+          (int8_t *)outputs[score_idx].buf, app_ctx->output_attrs[score_idx].zp,
+          app_ctx->output_attrs[score_idx].scale,
+          (int8_t *)outputs[kpt_idx].buf, app_ctx->output_attrs[kpt_idx].zp,
+          app_ctx->output_attrs[kpt_idx].scale,
+          (int8_t *)outputs[visibilities_idx].buf,
+          app_ctx->output_attrs[visibilities_idx].zp,
+          app_ctx->output_attrs[visibilities_idx].scale, grid_h, grid_w, stride,
+          dfl_len, filterBoxes, objProbs, kpt, visibilities, conf_threshold);
+    }
+  }
+
+  // no object detect
+  if (validCount <= 0) {
+    return 0;
+  }
+  std::vector<int> indexArray;
+  for (int i = 0; i < validCount; ++i) {
+    indexArray.push_back(i);
+  }
+  quick_sort_indice_inverse(objProbs, 0, validCount - 1, indexArray);
+  // 因为Pose只有人类一个种类， 所以只有nms可以简化
+  nms(validCount, filterBoxes, indexArray, nms_threshold);
+
+  int last_count = 0;
+  od_results->count = 0;
+
+  /* box valid detect target */
+  for (int i = 0; i < validCount; ++i) {
+    if (indexArray[i] == -1 || last_count >= OBJ_NUMB_MAX_SIZE) {
+      continue;
+    }
+    int n = indexArray[i];
+
+    float x1 = filterBoxes[n * 4 + 0] - letter_box->x_pad;
+    float y1 = filterBoxes[n * 4 + 1] - letter_box->y_pad;
+    float x2 = x1 + filterBoxes[n * 4 + 2];
+    float y2 = y1 + filterBoxes[n * 4 + 3];
+    float obj_conf = objProbs[i];
+
+    od_results->results[last_count].box.left =
+        (int)(clamp(x1, 0, model_in_w) / letter_box->scale);
+    od_results->results[last_count].box.top =
+        (int)(clamp(y1, 0, model_in_h) / letter_box->scale);
+    od_results->results[last_count].box.right =
+        (int)(clamp(x2, 0, model_in_w) / letter_box->scale);
+    od_results->results[last_count].box.bottom =
+        (int)(clamp(y2, 0, model_in_h) / letter_box->scale);
+    od_results->results[last_count].prop = obj_conf;
+    for (int j = 0; j < 34; j = j + 2) {
+      auto kpt_x = kpt.at(34 * n + j) - letter_box->x_pad;
+      auto kpt_y = kpt.at(34 * n + j + 1) - letter_box->y_pad;
+      kpt_x /= letter_box->scale;
+      kpt_y /= letter_box->scale;
+      od_results->results_pose[last_count].kpt[j] = kpt_x;
+      od_results->results_pose[last_count].kpt[j + 1] = kpt_y;
+      od_results->results_pose[last_count].visibility[j / 2] =
+          visibilities.at(17 * n + j / 2);
+      KAYLORDUT_LOG_INFO(
+          "i = {}, last_count = {}, num = {}, ({} {} {})", i, last_count + 1,
+          j / 2, od_results->results_pose[last_count].kpt[j],
+          od_results->results_pose[last_count].kpt[j + 1],
+          od_results->results_pose[last_count].visibility[j / 2]);
+    }
+    last_count++;
+  }
+  od_results->count = last_count;
+  KAYLORDUT_LOG_INFO("valid count: {}, results count: {}", validCount,
+                     od_results->count);
+  return 0;
 }
 
 int post_process(rknn_app_context_t *app_ctx, rknn_output *outputs,
