@@ -1036,9 +1036,6 @@ static int process_i8_pose(int8_t *box_tensor, int32_t box_zp, float box_scale,
           auto res_kpt_y = deqnt_affine_to_f32(kpt_y, kpt_zp, kpt_scale);
           auto res_kpt_visibility = deqnt_affine_to_f32(
               kpt_visibility, visibility_zp, visibility_scale);
-          KAYLORDUT_LOG_INFO("count = {}, offset = {}, kpt = ({} {} {})",
-                             validCount, offset, res_kpt_x, res_kpt_y,
-                             res_kpt_visibility);
           kpt.push_back(res_kpt_x);
           kpt.push_back(res_kpt_y);
           visibilities.push_back(res_kpt_visibility);
@@ -1271,11 +1268,6 @@ int post_process_pose(rknn_app_context_t *app_ctx, rknn_output *outputs,
       od_results->results_pose[last_count].kpt[j + 1] = kpt_y;
       od_results->results_pose[last_count].visibility[j / 2] =
           visibilities.at(17 * n + j / 2);
-      KAYLORDUT_LOG_INFO(
-          "i = {}, last_count = {}, num = {}, ({} {} {})", i, last_count + 1,
-          j / 2, od_results->results_pose[last_count].kpt[j],
-          od_results->results_pose[last_count].kpt[j + 1],
-          od_results->results_pose[last_count].visibility[j / 2]);
     }
     last_count++;
   }
