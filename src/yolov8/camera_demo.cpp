@@ -19,6 +19,7 @@ struct ProgramOptions {
   int width;
   int height;
   double fps;
+  bool is_track = false;
 };
 
 // 检查字符串是否表示有效的数字
@@ -31,6 +32,7 @@ bool isNumber(const std::string &str) {
 
 // 这个函数将解析命令行参数并返回一个 ProgramOptions 结构体
 bool parseCommandLine(int argc, char *argv[], ProgramOptions &options) {
+  options.is_track = false;
   static struct option longOpts[] = {
       {"model_path", required_argument, nullptr, 'm'},
       {"label_path", required_argument, nullptr, 'l'},
@@ -40,10 +42,11 @@ bool parseCommandLine(int argc, char *argv[], ProgramOptions &options) {
       {"height", required_argument, nullptr, 'h'},
       {"fps", required_argument, nullptr, 'f'},
       {"help", no_argument, nullptr, '?'},
+      {"track", no_argument, nullptr, 'T'},
       {nullptr, 0, nullptr, 0}};
 
   int c, optionIndex = 0;
-  while ((c = getopt_long(argc, argv, "m:l:t:i:w:h:f:?", longOpts,
+  while ((c = getopt_long(argc, argv, "m:l:t:i:w:h:f:?T", longOpts,
                           &optionIndex)) != -1) {
     switch (c) {
       case 'm':
@@ -112,6 +115,9 @@ bool parseCommandLine(int argc, char *argv[], ProgramOptions &options) {
           return false;
         }
         break;
+      case 'T':
+        options.is_track = true;
+        break;
       case '?':
         std::cout << "Usage: " << argv[0]
                   << " [--model_path|-m model_path] [--camera_index|-i index] "
@@ -158,7 +164,8 @@ int main(int argc, char *argv[]) {
   auto camera = std::make_unique<Camera>(
       options.camera_index, cv::Size(options.width, options.height),
       options.fps);
-  ImageProcess image_process(options.width, options.height, 640, false, options.fps);
+  ImageProcess image_process(options.width, options.height, 640,
+                             options.is_track, options.fps);
   //  cv::VideoWriter video_writer(
   //      getCurrentTimeStr() + ".mkv", cv::VideoWriter::fourcc('X', '2', '6',
   //      '4'), options.fps, cv::Size(options.width, options.height), true);
