@@ -5,6 +5,7 @@
 #include "image_process.h"
 
 #include "kaylordut/log/logger.h"
+#include "BYTETracker.h"
 #define N_CLASS_COLORS (20)
 unsigned char class_colors[][3] = {
     {255, 56, 56},    // 'FF3838'
@@ -29,7 +30,7 @@ unsigned char class_colors[][3] = {
     {255, 55, 199}    // 'FF37C7'
 };
 
-ImageProcess::ImageProcess(int width, int height, int target_size) {
+ImageProcess::ImageProcess(int width, int height, int target_size, bool is_track, int framerate) {
   scale_ = static_cast<double>(target_size) / std::max(height, width);
   padding_x_ = target_size - static_cast<int>(width * scale_);
   padding_y_ = target_size - static_cast<int>(height * scale_);
@@ -39,6 +40,10 @@ ImageProcess::ImageProcess(int width, int height, int target_size) {
   letterbox_.scale = scale_;
   letterbox_.x_pad = padding_x_ / 2;
   letterbox_.y_pad = padding_y_ / 2;
+  is_track_ = is_track;
+  if (is_track) {
+    tracker_ = std::make_unique<BYTETracker>(framerate, 30);
+  }
 }
 
 std::unique_ptr<cv::Mat> ImageProcess::Convert(const cv::Mat &src) {
@@ -72,19 +77,19 @@ void ImageProcess::ImagePostProcess(cv::Mat &image,
         for (int k = 0; k < width; k++) {
           int pixel_offset = 3 * (j * width + k);
           if (seg_mask[j * width + k] != 0) {
-            ori_img[pixel_offset + 0] = (unsigned char)clamp(
+            ori_img[pixel_offset + 0] = (unsigned char) clamp(
                 class_colors[seg_mask[j * width + k] % N_CLASS_COLORS][0] *
-                        (1 - alpha) +
+                    (1 - alpha) +
                     ori_img[pixel_offset + 0] * alpha,
                 0, 255);  // r
-            ori_img[pixel_offset + 1] = (unsigned char)clamp(
+            ori_img[pixel_offset + 1] = (unsigned char) clamp(
                 class_colors[seg_mask[j * width + k] % N_CLASS_COLORS][1] *
-                        (1 - alpha) +
+                    (1 - alpha) +
                     ori_img[pixel_offset + 1] * alpha,
                 0, 255);  // g
-            ori_img[pixel_offset + 2] = (unsigned char)clamp(
+            ori_img[pixel_offset + 2] = (unsigned char) clamp(
                 class_colors[seg_mask[j * width + k] % N_CLASS_COLORS][2] *
-                        (1 - alpha) +
+                    (1 - alpha) +
                     ori_img[pixel_offset + 2] * alpha,
                 0, 255);  // b
           }
@@ -95,7 +100,11 @@ void ImageProcess::ImagePostProcess(cv::Mat &image,
   }
   KAYLORDUT_LOG_INFO("model type is {}", od_results.model_type);
   if (od_results.model_type == ModelType::DETECTION) {
-    ProcessDetectionImage(image, od_results);
+    if (is_track_) {
+      ProcessTrackImage(image, od_results);
+    } else {
+      ProcessDetectionImage(image, od_results);
+    }
   } else if (od_results.model_type == ModelType::OBB) {
     ProcessOBBImage(image, od_results);
   } else if (od_results.model_type == ModelType::POSE) {
@@ -136,6 +145,37 @@ void ImageProcess::ProcessOBBImage(
     DrawRotatedRect(image, obb_result.box.x, obb_result.box.y, obb_result.box.w,
                     obb_result.box.h, obb_result.box.theta * 180.0 / CV_PI,
                     cv::Scalar(0, 255, 0), 2);
+  }
+}
+
+void ImageProcess::ProcessTrackImage(cv::Mat &image, object_detect_result_list &od_results) const {
+  std::vector<Object> objects;
+  for (int i = 0; i < od_results.count; ++i) {
+    object_detect_result *detect_result = &(od_results.results[i]);
+    KAYLORDUT_LOG_INFO("{} @ ({} {} {} {}) {}",
+                       coco_cls_to_name(detect_result->cls_id),
+                       detect_result->box.left, detect_result->box.top,
+                       detect_result->box.right, detect_result->box.bottom,
+                       detect_result->prop);
+    Object object;
+    object.rect = cv::Rect(detect_result->box.left,
+                           detect_result->box.top,
+                           detect_result->box.right - detect_result->box.left,
+                           detect_result->box.bottom - detect_result->box.top);
+    object.label = detect_result->cls_id;
+    object.prob = detect_result->prop;
+    objects.push_back(object);
+  }
+  std::vector<STrack> output_stracks = tracker_->update(objects);
+  for (size_t i = 0; i < output_stracks.size(); ++i) {
+    std::vector<float> tlwh = output_stracks[i].tlwh;
+    bool vertical = tlwh[2] / tlwh[3] > 1.6;
+    if (tlwh[2] * tlwh[3] > 20 && !vertical) {
+      Scalar s = tracker_->get_color(output_stracks[i].track_id);
+      putText(image, format("%d", output_stracks[i].track_id), Point(tlwh[0], tlwh[1] - 5),
+              0, 0.6, Scalar(0, 0, 255), 2, LINE_AA);
+      rectangle(image, Rect(tlwh[0], tlwh[1], tlwh[2], tlwh[3]), s, 2);
+    }
   }
 }
 
@@ -202,17 +242,17 @@ void ImageProcess::ProcessPoseImage(
       cv::circle(image, p, 10, cv::Scalar(0, 0, 255), cv::FILLED, cv::LINE_AA);
     }
     std::vector<int> pairs = {
-        0,  1,   // Nose to left eye
-        1,  3,   // Left eye to left ear
-        0,  2,   // Nose to right eye
-        2,  4,   // Right eye to right ear
-        0,  5,   // Nose to left shoulder
-        5,  7,   // Left shoulder to left elbow
-        7,  9,   // Left elbow to left wrist
-        0,  6,   // Nose to right shoulder
-        6,  8,   // Right shoulder to right elbow
-        8,  10,  // Right elbow to right wrist
-        5,  6,   // Left shoulder to right shoulder
+        0, 1,   // Nose to left eye
+        1, 3,   // Left eye to left ear
+        0, 2,   // Nose to right eye
+        2, 4,   // Right eye to right ear
+        0, 5,   // Nose to left shoulder
+        5, 7,   // Left shoulder to left elbow
+        7, 9,   // Left elbow to left wrist
+        0, 6,   // Nose to right shoulder
+        6, 8,   // Right shoulder to right elbow
+        8, 10,  // Right elbow to right wrist
+        5, 6,   // Left shoulder to right shoulder
         11, 12,  // Left hip to right hip
         11, 5,   // Left hip to left shoulder
         12, 6,   // Right hip to right shoulder

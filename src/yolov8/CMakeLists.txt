@@ -13,11 +13,14 @@ add_subdirectory(utils)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 find_package(kaylordut REQUIRED)
+find_package(bytetrack REQUIRED)
+
+
 add_executable(videofile_demo videofile_demo.cpp)
-target_link_libraries(videofile_demo ${kaylordut_LIBS} ${OpenCV_LIBS} yolov8-kaylordut)
+target_link_libraries(videofile_demo ${kaylordut_LIBS} ${OpenCV_LIBS} yolov8-kaylordut ${bytetrack_LIBS})
 
 add_executable(camera_demo camera_demo.cpp)
-target_link_libraries(camera_demo ${kaylordut_LIBS} ${OpenCV_LIBS} yolov8-kaylordut)
+target_link_libraries(camera_demo ${kaylordut_LIBS} ${OpenCV_LIBS} yolov8-kaylordut ${bytetrack_LIBS})
 
 add_executable(imagefile_demo imagefile_demo.cpp)
-target_link_libraries(imagefile_demo ${kaylordut_LIBS} ${OpenCV_LIBS} yolov8-kaylordut)
+target_link_libraries(imagefile_demo ${kaylordut_LIBS} ${OpenCV_LIBS} yolov8-kaylordut ${bytetrack_LIBS})

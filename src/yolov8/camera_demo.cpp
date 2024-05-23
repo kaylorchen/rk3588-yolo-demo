@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
   auto camera = std::make_unique<Camera>(
       options.camera_index, cv::Size(options.width, options.height),
       options.fps);
-  ImageProcess image_process(options.width, options.height, 640);
+  ImageProcess image_process(options.width, options.height, 640, false, options.fps);
   //  cv::VideoWriter video_writer(
   //      getCurrentTimeStr() + ".mkv", cv::VideoWriter::fourcc('X', '2', '6',
   //      '4'), options.fps, cv::Size(options.width, options.height), true);

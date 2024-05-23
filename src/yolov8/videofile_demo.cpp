@@ -15,6 +15,7 @@ struct ProgramOptions {
   std::string input_filename;
   int thread_count;
   double framerate;
+  bool is_track = false;
 };
 
 // 检查字符串是否表示有效的数字
@@ -25,8 +26,10 @@ bool isNumber(const std::string &str) {
   return errno == 0 && *end == '\0' && end != str.c_str();
 }
 
+
 // 这个函数将解析命令行参数并返回一个 ProgramOptions 结构体
 bool parseCommandLine(int argc, char *argv[], ProgramOptions &options) {
+  options.is_track = false;
   static struct option longOpts[] = {
       {"model_path", required_argument, nullptr, 'm'},
       {"label_path", required_argument, nullptr, 'l'},
@@ -34,10 +37,11 @@ bool parseCommandLine(int argc, char *argv[], ProgramOptions &options) {
       {"framerate", required_argument, nullptr, 'f'},
       {"input_filename", required_argument, nullptr, 'i'},
       {"help", no_argument, nullptr, 'h'},
+      {"track", no_argument, nullptr, 'T'},
       {nullptr, 0, nullptr, 0}};
 
   int c, optionIndex = 0;
-  while ((c = getopt_long(argc, argv, "m:l:t:f:i:h", longOpts, &optionIndex)) !=
+  while ((c = getopt_long(argc, argv, "m:l:t:f:i:hT", longOpts, &optionIndex)) !=
          -1) {
     switch (c) {
       case 'm':
@@ -80,6 +84,9 @@ bool parseCommandLine(int argc, char *argv[], ProgramOptions &options) {
                      "[--threads|-t thread_count] [--framerate|-f framerate] "
                      "[--label_path|-l label_path]\n";
         exit(EXIT_SUCCESS);
+      case 'T':
+        options.is_track = true;
+        break;
       case '?':
         // 错误消息由getopt_long自动处理
         return false;
@@ -114,7 +121,7 @@ int main(int argc, char *argv[]) {
   VideoFile video_file(options.input_filename.c_str());
   int delay = 1000 / options.framerate;
   ImageProcess image_process(video_file.get_frame_width(),
-                             video_file.get_frame_height(), 640);
+                             video_file.get_frame_height(), 640, options.is_track, options.framerate);
   std::unique_ptr<cv::Mat> image;
   std::shared_ptr<cv::Mat> image_res;
   uint8_t running_flag = 0;

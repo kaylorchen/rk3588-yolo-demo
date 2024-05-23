@@ -29,7 +29,7 @@ void VideoFile::Display(const float framerate, const int target_size) {
   cv::Mat frame;
   ImageProcess image_process(capture_->get(cv::CAP_PROP_FRAME_WIDTH),
                              capture_->get(cv::CAP_PROP_FRAME_HEIGHT),
-                             target_size);
+                             target_size, false, 30);
   while (true) {
     *capture_ >> frame;
     if (frame.empty()) {
