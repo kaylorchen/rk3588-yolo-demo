@@ -100,7 +100,7 @@ void ImageProcess::ImagePostProcess(cv::Mat &image,
     }
   }
   KAYLORDUT_LOG_INFO("model type is {}", od_results.model_type);
-  if (od_results.model_type == ModelType::DETECTION) {
+  if (od_results.model_type == ModelType::DETECTION || od_results.model_type == ModelType::V10_DETECTION) {
     if (is_track_) {
       ProcessTrackImage(image, od_results);
     } else {

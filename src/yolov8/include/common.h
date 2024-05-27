@@ -8,7 +8,7 @@
 #define OBJ_NUMB_MAX_SIZE 128
 #define OBJ_CLASS_NUM 80
 #define NMS_THRESH 0.8
-#define BOX_THRESH 0.35
+#define BOX_THRESH 0.5
 #define PROTO_CHANNEL (32)
 #define PROTO_HEIGHT (160)
 #define PROTO_WEIGHT (160)
@@ -18,6 +18,7 @@ enum ModelType {
   DETECTION = 2,
   OBB = 3,
   POSE = 4,
+  V10_DETECTION = 5,
 };
 /**
  * @brief LetterBox
