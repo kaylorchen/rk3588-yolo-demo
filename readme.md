@@ -13,7 +13,7 @@ deb [signed-by=/etc/apt/keyrings/kaylor-keyring.gpg] http://apt.kaylordut.cn/kay
 EOF
 sudo wget -O /etc/apt/keyrings/kaylor-keyring.gpg http://apt.kaylordut.cn/kaylor-keyring.gpg
 sudo apt update
-sudo apt install kaylordut-dev
+sudo apt install kaylordut-dev libbytetrack
 ```
 
 ### Build the Project and Deploy IT to Your RK3588
