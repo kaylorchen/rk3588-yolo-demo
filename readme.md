@@ -1,3 +1,6 @@
+# Demo Video
+https://space.bilibili.com/327258623?spm_id_from=333.999.0.0
+
 # Yolov8 Demo for RK3588
 The project is a multi-threaded inference demo of Yolov8 running on the RK3588 platform, which has been adapted for reading video files and camera feeds. The demo uses the Yolov8n model for file inference, with a maximum inference frame rate of up to 100 frames per second.
 
