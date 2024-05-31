@@ -731,9 +731,6 @@ int post_process_seg(rknn_app_context_t *app_ctx, rknn_output *outputs,
   int grid_h = 0;
   int grid_w = 0;
 
-  memset(od_results, 0,
-         sizeof(object_detect_result_list));  // 把输出结果列表置零
-
   int dfl_len = app_ctx->output_attrs[0].dims[1] / 4;
   /***
    * 结果输出有三种输出80x80 40x40
@@ -1116,11 +1113,11 @@ static int process_i8(int8_t *box_tensor, int32_t box_zp, float box_scale,
 }
 
 static int process_i8_v10(int8_t *box_tensor, int32_t box_zp, float box_scale,
-                          int8_t *score_tensor, int32_t score_zp, float score_scale,
-                          int grid_h, int grid_w, int stride,
+                          int8_t *score_tensor, int32_t score_zp,
+                          float score_scale, int grid_h, int grid_w, int stride,
                           int dfl_len, std::vector<float> &boxes,
-                          std::vector<float> &objProbs, std::vector<int> &classId,
-                          float threshold) {
+                          std::vector<float> &objProbs,
+                          std::vector<int> &classId, float threshold) {
   int validCount = 0;
   int grid_len = grid_h * grid_w;
   int8_t score_thres_i8 = qnt_f32_to_affine(threshold, score_zp, score_scale);
@@ -1249,8 +1246,6 @@ int post_process_pose(rknn_app_context_t *app_ctx, rknn_output *outputs,
   int model_in_w = app_ctx->model_width;
   int model_in_h = app_ctx->model_height;
 
-  memset(od_results, 0, sizeof(object_detect_result_list));
-
   // default 3 branch
   int dfl_len = app_ctx->output_attrs[0].dims[1] / 4;
   int output_per_branch = app_ctx->io_num.n_output / 3;
@@ -1336,10 +1331,9 @@ int post_process_pose(rknn_app_context_t *app_ctx, rknn_output *outputs,
 }
 
 int post_process_v10_detection(rknn_app_context_t *app_ctx,
-                               rknn_output *outputs,
-                               letterbox_t *letter_box,
+                               rknn_output *outputs, letterbox_t *letter_box,
                                float conf_threshold,
-                               object_detect_result_list *od_results){
+                               object_detect_result_list *od_results) {
   std::vector<float> filterBoxes;
   std::vector<float> objProbs;
   std::vector<int> classId;
@@ -1349,8 +1343,6 @@ int post_process_v10_detection(rknn_app_context_t *app_ctx,
   int grid_w = 0;
   int model_in_w = app_ctx->model_width;
   int model_in_h = app_ctx->model_height;
-
-  memset(od_results, 0, sizeof(object_detect_result_list));
 
   // default 3 branch
   int dfl_len = app_ctx->output_attrs[0].dims[1] / 4;
@@ -1368,8 +1360,8 @@ int post_process_v10_detection(rknn_app_context_t *app_ctx,
           (int8_t *)outputs[box_idx].buf, app_ctx->output_attrs[box_idx].zp,
           app_ctx->output_attrs[box_idx].scale,
           (int8_t *)outputs[score_idx].buf, app_ctx->output_attrs[score_idx].zp,
-          app_ctx->output_attrs[score_idx].scale, grid_h, grid_w, stride, dfl_len,
-          filterBoxes, objProbs, classId, conf_threshold);
+          app_ctx->output_attrs[score_idx].scale, grid_h, grid_w, stride,
+          dfl_len, filterBoxes, objProbs, classId, conf_threshold);
     }
   }
   // no object detect
@@ -1405,7 +1397,6 @@ int post_process_v10_detection(rknn_app_context_t *app_ctx,
   }
   od_results->count = last_count;
   return 0;
-
 }
 
 int post_process(rknn_app_context_t *app_ctx, rknn_output *outputs,
@@ -1420,8 +1411,6 @@ int post_process(rknn_app_context_t *app_ctx, rknn_output *outputs,
   int grid_w = 0;
   int model_in_w = app_ctx->model_width;
   int model_in_h = app_ctx->model_height;
-
-  memset(od_results, 0, sizeof(object_detect_result_list));
 
   // default 3 branch
   int dfl_len = app_ctx->output_attrs[0].dims[1] / 4;
@@ -1463,15 +1452,16 @@ int post_process(rknn_app_context_t *app_ctx, rknn_output *outputs,
     return 0;
   }
   std::vector<int> indexArray;
-  for (int i = 0; i < validCount; ++i) {
-    indexArray.push_back(i);
-  }
-  quick_sort_indice_inverse(objProbs, 0, validCount - 1, indexArray);
-
-  std::set<int> class_set(std::begin(classId), std::end(classId));
-
-  for (auto c : class_set) {
-    nms(validCount, filterBoxes, classId, indexArray, c, nms_threshold);
+  // 如果是Yolov8 就进行nms， yolov10不需要
+  if (od_results->model_type == ModelType::DETECTION) {
+    for (int i = 0; i < validCount; ++i) {
+      indexArray.push_back(i);
+    }
+    quick_sort_indice_inverse(objProbs, 0, validCount - 1, indexArray);
+    std::set<int> class_set(std::begin(classId), std::end(classId));
+    for (auto c : class_set) {
+      nms(validCount, filterBoxes, classId, indexArray, c, nms_threshold);
+    }
   }
 
   int last_count = 0;
@@ -1479,10 +1469,16 @@ int post_process(rknn_app_context_t *app_ctx, rknn_output *outputs,
 
   /* box valid detect target */
   for (int i = 0; i < validCount; ++i) {
-    if (indexArray[i] == -1 || last_count >= OBJ_NUMB_MAX_SIZE) {
-      continue;
+    int n;
+    // 如果是yolov8， 根据nms结果进行操作
+    if (od_results->model_type == ModelType::DETECTION) {
+      if (indexArray[i] == -1 || last_count >= OBJ_NUMB_MAX_SIZE) {
+        continue;
+      }
+      n = indexArray[i];
+    } else {
+      n = i;
     }
-    int n = indexArray[i];
 
     float x1 = filterBoxes[n * 4 + 0] - letter_box->x_pad;
     float y1 = filterBoxes[n * 4 + 1] - letter_box->y_pad;
@@ -1521,8 +1517,6 @@ int post_process_obb(rknn_app_context_t *app_ctx, rknn_output *outputs,
   int grid_w = 0;
   int model_in_w = app_ctx->model_width;
   int model_in_h = app_ctx->model_height;
-
-  memset(od_results, 0, sizeof(object_detect_result_list));
 
   // default 3 branch
   int dfl_len = app_ctx->output_attrs[0].dims[1] / 4;

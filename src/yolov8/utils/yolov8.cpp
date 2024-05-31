@@ -270,24 +270,30 @@ int Yolov8::Inference(void *image_buf, object_detect_result_list *od_results,
   const float nms_threshold = NMS_THRESH;       // 默认的NMS阈值
   const float box_conf_threshold = BOX_THRESH;  // 默认的置信度阈值
   // Post Process
-  // 分割的模型输出有13层
-  if (model_type_ == ModelType::SEGMENT) {
-    post_process_seg(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
+  // 把输出结果列表置零
+  memset(od_results, 0, sizeof(object_detect_result_list));
+  od_results->model_type = model_type_;
+  KAYLORDUT_TIME_COST_INFO(
+      "rknn_outputs_post_process",
+      if (model_type_ == ModelType::SEGMENT) {
+        post_process_seg(&app_ctx_, outputs_.get(), &letter_box,
+                         box_conf_threshold, nms_threshold, od_results);
+      } else if (model_type_ == ModelType::DETECTION ||
+                 model_type_ == ModelType::V10_DETECTION) {
+        post_process(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
                      nms_threshold, od_results);
-  } else if (model_type_ == ModelType::DETECTION) {
-    post_process(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold,
-                 nms_threshold, od_results);
-  } else if (model_type_ == ModelType::OBB) {
-    KAYLORDUT_TIME_COST_INFO(
-        "post_process obb",
+      } else if (model_type_ == ModelType::OBB) {
         post_process_obb(&app_ctx_, outputs_.get(), &letter_box,
-                         box_conf_threshold, nms_threshold, od_results););
-  } else if (model_type_ == ModelType::POSE) {
-    post_process_pose(&app_ctx_, outputs_.get(), &letter_box,
-                      box_conf_threshold, nms_threshold, od_results);
-  } else if (model_type_ == ModelType::V10_DETECTION){
-    post_process_v10_detection(&app_ctx_, outputs_.get(), &letter_box, box_conf_threshold, od_results);
-  }
+                         box_conf_threshold, nms_threshold, od_results);
+      } else if (model_type_ == ModelType::POSE) {
+        post_process_pose(&app_ctx_, outputs_.get(), &letter_box,
+                          box_conf_threshold, nms_threshold, od_results);
+      }
+      /*else if (model_type_ == ModelType::V10_DETECTION) {
+        post_process_v10_detection(&app_ctx_, outputs_.get(), &letter_box,
+      box_conf_threshold, od_results);
+      }*/
+  );
   od_results->model_type = model_type_;
 
   // Remeber to release rknn outputs_
