@@ -24,6 +24,15 @@ go to my blog --> [blog.kaylordut.com](https://blog.kaylordut.com/2024/02/09/rk3
 > - rknn-toolkit2(release:1.6.0) does not support some operators about attention, so it runs attention steps with CPU, leading to increased inference time. 
 > - rknn-toolkit2(beta:2.0.0b12) has the attention operators for 3588, so I build a docker image, you can pull it from __**kaylor/rknn_onnx2rknn:beta**__
 
+## Inference Time
+Please refer to the spreadsheet '[8vs10.xlsx](./8vs10.xlsx)' for details.
+
+|V8l-2.0.0|	V8l-1.6.0|	V10l-2.0.0|	V10l-1.6.0|	V8n-2.0.0	|V8n-1.6.0	|V10n-2.0.0|	V10n-1.6.0|
+|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|
+|133.07572815534|	133.834951456311|	122.992233009709|	204.471844660194|	17.8990291262136|	18.3300970873786|	21.3009708737864|	49.9883495145631|
+
+
+
 
 
 # Demo Video and Guideline
