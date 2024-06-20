@@ -51,7 +51,7 @@ void RknnPool::AddInferenceTask(std::shared_ptr<cv::Mat> src,
         cv::Mat rgb_img = cv::Mat::zeros(
             this->models_[mode_id]->get_model_width(),
             this->models_[mode_id]->get_model_height(), convert_img->type());
-        cv::cvtColor(*convert_img, rgb_img, cv::COLOR_RGB2BGR);
+        cv::cvtColor(*convert_img, rgb_img, cv::COLOR_BGR2RGB);
         object_detect_result_list od_results;
         this->models_[mode_id]->Inference(rgb_img.ptr(), &od_results,
                                           image_process.get_letter_box());
