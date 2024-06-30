@@ -64,8 +64,11 @@ void RknnPool::AddInferenceTask(std::shared_ptr<cv::Mat> src,
 
 int RknnPool::get_model_id() {
   std::lock_guard<std::mutex> lock(id_mutex_);
-  int mode_id = id % thread_num_;
+  int mode_id = id;
   id++;
+  if (id == thread_num_) {
+    id = 0;
+  }
   //  KAYLORDUT_LOG_INFO("id = {}, num = {}, mode id = {}", id, thread_num_,
   //  mode_id);
   return mode_id;
