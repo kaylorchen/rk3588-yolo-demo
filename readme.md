@@ -53,6 +53,8 @@ sudo wget -O /etc/apt/keyrings/kaylor-keyring.gpg http://apt.kaylordut.cn/kaylor
 sudo apt update
 sudo apt install kaylordut-dev libbytetrack
 ```
+> If your OS is not Ubuntu22.04, and find kaylordut-dev and libbytetrack sources in my github.
+
 
 ## Build the Project for Your RK3588
 
