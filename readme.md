@@ -2,6 +2,8 @@
 # Yolov8/v10 Demo for RK3588
 The project is a multi-threaded inference demo of Yolov8 running on the RK3588 platform, which has been adapted for reading video files and camera feeds. The demo uses the Yolov8n model for file inference, with a maximum inference frame rate of up to 100 frames per second.
 
+> If you want to test yolov8n with ros2 for yourself kit, click the [link](./yolov8n-ros2.md)
+
 # Model
 ## Download Model File
 you can find the model file in the 'src/yolov8/model', and some large files: 
