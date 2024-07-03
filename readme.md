@@ -5,7 +5,8 @@ The project is a multi-threaded inference demo of Yolov8 running on the RK3588 p
 # Model
 ## Download Model File
 you can find the model file in the 'src/yolov8/model', and some large files: 
-Link: https://pan.baidu.com/s/1zfSVzR1G7mb-EQvs6A6ZYw?pwd=gmcs Password: gmcs 
+Link: https://pan.baidu.com/s/1zfSVzR1G7mb-EQvs6A6ZYw?pwd=gmcs Password: gmcs   
+Google Drive: https://drive.google.com/drive/folders/1FYluJpdaL-680pipgIQ1zsqqRvNbruEp?usp=sharing
 
 ## Model pt --> onnx
 ### For Yolov8 
