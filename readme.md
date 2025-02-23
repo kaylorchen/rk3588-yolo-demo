@@ -1,4 +1,8 @@
 
+# New Project
+An inference framework compatible with TensorRT, OnnxRuntime, NNRT and RKNN  
+If you want to find some more yolo8/yolo11 demo and depth anything demo, visit my another [repository](https://github.com/kaylorchen/ai_framework_demo)
+
 # Yolov8/v10 Demo for RK3588
 The project is a multi-threaded inference demo of Yolov8 running on the RK3588 platform, which has been adapted for reading video files and camera feeds. The demo uses the Yolov8n model for file inference, with a maximum inference frame rate of up to 100 frames per second.
 
