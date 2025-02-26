@@ -44,7 +44,8 @@ Please refer to the spreadsheet '[8vs10.xlsx](./8vs10.xlsx)' for details.
 
 # Demo Video and Guideline
 https://space.bilibili.com/327258623?spm_id_from=333.999.0.0  
-QQ group: 957577822
+QQ group1: 957577822 (full)
+QQ group2: 546943464
 
 # Prepare
 
