@@ -1,4 +1,10 @@
 
+# 写在前面的话
+如果你看到这个仓库，证明你想试试这个多线程的推理。
+1. 这个里的代码不是最优的，有些错序的问题需要其他手段解决，我没有在这里解决，你可以看下一个标题新版本仓库的链接。新仓库解决了这个问题
+2. 本仓库的代码思路想法，在我的B站上有详细的讲解，需要理解程序的可以去b站搜我“kaylordut”
+3. 项目合作的可以发邮件到kaylor.chen@qq.com, 邮件请说明来意，和简单的需求，以及你的预算。邮件我一般都回复，请不要一来就索要微信，一个切实可行的项目或者良好的技术交流是良好的开始。
+
 # New Project
 An inference framework compatible with TensorRT, OnnxRuntime, NNRT and RKNN  
 If you want to find some more yolo8/yolo11 demo and depth anything demo, visit my another [repository](https://github.com/kaylorchen/ai_framework_demo)
