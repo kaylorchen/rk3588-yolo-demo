@@ -5,6 +5,10 @@
 2. 本仓库的代码思路想法，在我的B站上有详细的讲解，需要理解程序的可以去b站搜我“kaylordut”
 3. 项目合作的可以发邮件到kaylor.chen@qq.com, 邮件请说明来意，和简单的需求，以及你的预算。邮件我一般都回复，请不要一来就索要微信，一个切实可行的项目或者良好的技术交流是良好的开始。
 
+如果你缺一个运行改代码的开发板，[访问这里](https://github.com/HuntersRobotics/ai_hunter_guideline/blob/main/96-munual/AI%20Hunter%E4%BA%A7%E5%93%81%E8%AF%A6%E7%BB%86%E4%BB%8B%E7%BB%8D.md)
+If you need a development board to run this code, [visit here](https://github.com/HuntersRobotics/ai_hunter_guideline/blob/main/96-munual/AI%20Hunter%E4%BA%A7%E5%93%81%E8%AF%A6%E7%BB%86%E4%BB%8B%E7%BB%8D.md)
+
+
 # New Project
 An inference framework compatible with TensorRT, OnnxRuntime, NNRT and RKNN  
 If you want to find some more yolo8/yolo11 demo and depth anything demo, visit my another [repository](https://github.com/kaylorchen/ai_framework_demo)
